@@ -2,7 +2,7 @@
 $host = 'localhost';
 $user = 'root';
 $pass = '';
-$db = '';
+$db = 'schema_database';
 
 
 $conn = mysqli_connect($host, $user, $pass, $db);

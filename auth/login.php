@@ -86,15 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
                     <input type="password" class="form-control" id="password" name="password" placeholder="Nhập mật khẩu" required>
                 </div>
             </div>
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="remember">
-                <label class="form-check-label" for="remember">Nhớ mật khẩu</label>
-            </div>
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary btn-lg">Đăng Nhập</button>
-            </div>
-            <div class="text-center mt-3">
-                <a href="#" class="text-decoration-none text-muted">Quên mật khẩu?</a>
             </div>
             <div class="text-center mt-3">
                 <small class="text-muted">Chưa có tài khoản?

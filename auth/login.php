@@ -1,13 +1,38 @@
+<?php
+session_start();
+include '../config.php';
+$error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
+    if (empty($username) || empty($password)) {
+        $error = 'Tài khoản và mật khẩu không được để trống.';
+    } else {
+        $sql = "SELECT * FROM users WHERE username = '$username' OR email = '$username'";
+        $query = mysqli_query($conn, $sql);
+        if ($query && mysqli_num_rows($query) > 0){
+            $user = mysqli_fetch_assoc($query);
+            if ($password === $user['password']){
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                header('Location: ../index.php');
+                exit();
+            } else {
+                $error = 'Mật khẩu không đúng.';
+            }
+        } else {
+            $error = 'Tài khoản không tồn tại.';
+        }
+}
+}
+?>
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Nhập</title>
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
         body {
@@ -18,9 +43,7 @@
             justify-content: center;
             margin: 0;
             padding: 20px;
-            /* Thêm padding để trên mobile không bị sát mép */
         }
-
         .login-card {
             max-width: 420px;
             width: 100%;
@@ -29,26 +52,26 @@
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
             padding: 2.5rem;
         }
-
         .btn-primary {
             background: linear-gradient(to right, #6a11cb, #2575fc);
             border: none;
         }
-
         .btn-primary:hover {
             opacity: 0.9;
         }
     </style>
 </head>
-
 <body>
-
     <div class="login-card">
         <div class="text-center mb-4">
             <h3 class="fw-bold">Đăng Nhập</h3>
         </div>
-
-        <form action="xuly_dangnhap.php" method="post">
+        <?php if (!empty($error)): ?>
+            <div class="alert alert-danger" role="alert">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        <form method="post">
             <div class="mb-3">
                 <label for="username" class="form-label">Tên đăng nhập hoặc Email</label>
                 <div class="input-group">
@@ -56,7 +79,6 @@
                     <input type="text" class="form-control" id="username" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
                 </div>
             </div>
-
             <div class="mb-3">
                 <label for="password" class="form-label">Mật khẩu</label>
                 <div class="input-group">
@@ -64,20 +86,9 @@
                     <input type="password" class="form-control" id="password" name="password" placeholder="Nhập mật khẩu" required>
                 </div>
             </div>
-
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="remember">
-                <label class="form-check-label" for="remember">Nhớ mật khẩu</label>
-            </div>
-
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary btn-lg">Đăng Nhập</button>
             </div>
-
-            <div class="text-center mt-3">
-                <a href="#" class="text-decoration-none text-muted">Quên mật khẩu?</a>
-            </div>
-
             <div class="text-center mt-3">
                 <small class="text-muted">Chưa có tài khoản?
                     <a href="./register.php" class="text-decoration-none fw-bold">Đăng ký ngay</a>
@@ -90,8 +101,6 @@
             </div>
         </form>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

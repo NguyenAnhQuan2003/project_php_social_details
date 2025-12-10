@@ -1,3 +1,11 @@
+<?php
+include "./project_cuoi_ky/config.php";
+
+if (!$conn) {
+    die('db lỗi kết nỗi!');
+}
+?>
+
 <!DOCTYPE html>
 <html lang="vi">
 

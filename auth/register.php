@@ -1,3 +1,37 @@
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+session_start();
+require '../config.php';
+
+$message = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $email    = $_POST['email'];
+    $password = $_POST['password'];
+    $confirm  = $_POST['confirm_password'];
+
+    if ($username == "" || $email == "" || $password == "") {
+        $message = "Vui lòng điền đầy đủ thông tin!";
+    } elseif ($password != $confirm) {
+        $message = "Mật khẩu nhập lại không khớp!";
+    } else {
+        $sql = "INSERT INTO users (username, email, password, role_id, role_level) 
+                VALUES ('$username', '$email', '$password', 1, 1)";
+        if ($conn->query($sql) === TRUE) {
+            $_SESSION['user_id'] = $conn->insert_id;
+            $_SESSION['username'] = $username;
+
+            header("Location: /project_cuoi_ky/index.php");
+            exit();
+        } else {
+            $message = "Lỗi SQL: " . $conn->error;
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -47,12 +81,18 @@
             <h3 class="fw-bold">Đăng Ký Tài Khoản</h3>
         </div>
 
-        <form action="xuly_dangky.php" method="post"> <!-- Thay bằng file xử lý PHP của bạn -->
+        <?php if ($message != ""): ?>
+            <div class="alert alert-danger text-center">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+
+        <form action="" method="post">
             <div class="mb-3">
                 <label for="fullname" class="form-label">Họ và tên</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person-circle"></i></span>
-                    <input type="text" class="form-control" id="fullname" name="fullname" placeholder="Nhập họ và tên" required>
+                    <input type="text" class="form-control" id="fullname" name="username" placeholder="Nhập họ và tên" required value="<?php echo isset($username) ? $username : ''; ?>">
                 </div>
             </div>
 
@@ -60,7 +100,7 @@
                 <label for="email" class="form-label">Email</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="Nhập email" required>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Nhập email" required value="<?php echo isset($email) ? $email : ''; ?>">
                 </div>
             </div>
 

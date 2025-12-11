@@ -1,7 +1,13 @@
-<?php 
+<?php
 session_start();
-include 'config.php';
+
+if (isset($_SESSION['user_id'])) {
+    $link_action = "./posts/cu_post.php";
+} else {
+    $link_action = "./auth/register.php";
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -15,17 +21,18 @@ include 'config.php';
             background: linear-gradient(to right, #6a11cb, #2575fc);
             min-height: 100vh;
             margin: 0;
+            padding-top: 70px;
         }
         .navbar {
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         .logo-img {
-            height: 50px;
+            height: 45px;
             width: auto;
         }
         .hero-section {
-            min-height: 80vh;
+            min-height: 60vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -51,72 +58,63 @@ include 'config.php';
     </style>
 </head>
 <body>
-    <!-- Header/Navbar -->
+
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
-            <!-- Logo bên trái -->
-            <a class="navbar-brand" href="index.php">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <img src="https://img.freepik.com/premium-vector/play-button-media-music-icon-logo-design-colorful-media-play-technology-logo-element-music-audio-streaming-service-app-video-icon-logo_144543-1677.jpg" alt="ShareHub Logo" class="logo-img">
-                <span class="ms-2 fw-bold fs-4">QQ social</span>
+                <span class="ms-2 fw-bold fs-4 text-primary">QQ social</span>
             </a>
-            <!-- Button bên phải (khi chưa đăng nhập) -->
-            <div class="ms-auto">
-                <a href="./auth/login.php" class="btn btn-outline-primary me-2">Đăng Nhập</a>
-                <a href="./auth/register.php" class="btn btn-primary">Đăng Ký</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="ms-auto d-flex align-items-center">
+
+                    <?php if (isset($_SESSION['user_id'])): ?>
+
+                        <span class="me-3 fw-bold text-dark">
+                            Hi, <?php echo $_SESSION['username']; ?>
+                        </span>
+                        <a href="./auth/logout.php" class="btn btn-outline-danger btn-sm">Đăng Xuất</a>
+
+                    <?php else: ?>
+
+                        <a href="./auth/login.php" class="btn btn-outline-primary me-2">Đăng Nhập</a>
+                        <a href="./auth/register.php" class="btn btn-primary">Đăng Ký</a>
+
+                    <?php endif; ?>
+
+                </div>
             </div>
         </div>
     </nav>
+
     <section class="hero-section">
-        <div>
+        <div class="container">
             <h1 class="display-3 fw-bold mb-4">Chào mừng đến QQ social</h1>
             <p class="lead mb-5">Nơi chia sẻ bài viết, video và kết nối với mọi người</p>
-            <a href="./posts/cu_post.php" class="btn btn-primary btn-lg">Bắt Đầu Đăng Bài Ngay</a>
+
+            <a href="<?php echo $link_action; ?>" class="btn btn-light text-primary fw-bold btn-lg">
+                Bắt Đầu Đăng Bài Ngay
+            </a>
         </div>
     </section>
-<div class="container my-5">
-        <h3 class="mb-4 fw-bold text-white">Bảng tin (Newsfeed)</h3>
+
+    <div class="container my-5">
         <div class="row">
-            <?php
-            $sql = 'SELECT posts.*, users.username 
-                    FROM posts
-                    JOIN users ON posts.user_id = users.id 
-                    ORDER BY posts.created_at DESC';
-            $query= mysqli_query($conn, $sql);
-            if (mysqli_num_rows($query) > 0) {
-                while ($row = mysqli_fetch_assoc($query)) {
-                    ?>
-                    <div class="col-md-6 col-lg-4 mb-4"> <div class="post-card h-100"> <img src="https://via.placeholder.com/400x200?text=Post+Image" class="w-100" alt="Post Image">
-                            <div class="p-3">
-                                <h5 class="fw-bold"><?php echo htmlspecialchars($row['title']); ?></h5>
-                                <p class="text-muted">
-                                    <?php 
-                                    $content = htmlspecialchars($row['content']);
-                                    if (strlen($content) > 100) {
-                                        echo substr($content, 0, 100) . '...';
-                                    } else {
-                                        echo $content;
-                                    }
-                                    ?>
-                                </p>
-                                <hr>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-primary fw-bold">
-                                        <i class="bi bi-person-circle me-1"></i> 
-                                        <?php echo htmlspecialchars($row['username']); ?>
-                                    </small>
-                                    <small class="text-muted">
-                                        <?php echo date('d/m/Y', strtotime($row['created_at'])); ?>
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="post-card">
+                    <img src="https://via.placeholder.com/400x250?text=Video+Example" class="w-100" alt="Video">
+                    <div class="p-3">
+                        <h5>Tiêu đề bài viết/video mẫu</h5>
+                        <p class="text-muted">Mô tả ngắn gọn...</p>
+                        <small class="text-muted">Đăng bởi: User123 • 1 giờ trước</small>
                     </div>
-                    <?php
-                }
-            } else {
-                echo '<p class="text-white text-center">Chưa có bài viết nào được chia sẻ.</p>';
-            }
-            ?>
+                </div>
+            </div>
         </div>
     </div>    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

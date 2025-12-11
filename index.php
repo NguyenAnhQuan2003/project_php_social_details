@@ -9,6 +9,7 @@ if (isset($_SESSION['user_id'])) {
 ?>
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,11 +23,17 @@ if (isset($_SESSION['user_id'])) {
             margin: 0;
             padding-top: 70px;
         }
+
         .navbar {
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
-        .logo-img { height: 45px; width: auto; }
+
+        .logo-img {
+            height: 45px;
+            width: auto;
+        }
+
         .hero-section {
             min-height: 60vh;
             display: flex;
@@ -35,12 +42,14 @@ if (isset($_SESSION['user_id'])) {
             text-align: center;
             color: white;
         }
+
         .btn-primary {
             background: linear-gradient(to right, #6a11cb, #2575fc);
             border: none;
             padding: 12px 30px;
             font-size: 1.2rem;
         }
+
         .post-card {
             background: white;
             border-radius: 12px;
@@ -49,9 +58,13 @@ if (isset($_SESSION['user_id'])) {
             margin-bottom: 2rem;
             transition: transform 0.3s;
         }
-        .post-card:hover { transform: translateY(-5px); }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
@@ -102,7 +115,7 @@ if (isset($_SESSION['user_id'])) {
             $query = mysqli_query($conn, $sql);
             if (mysqli_num_rows($query) > 0) {
                 while ($row = mysqli_fetch_assoc($query)) {
-                    ?>
+            ?>
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="post-card h-100">
                             <?php if ($row['type'] == 'video'): ?>
@@ -112,7 +125,7 @@ if (isset($_SESSION['user_id'])) {
                             <?php endif; ?>
                             <div class="p-3">
                                 <h5 class="fw-bold">
-                                    <?php if($row['type'] == 'video') echo '<i class="bi bi-play-circle-fill text-danger"></i> '; ?>
+                                    <?php if ($row['type'] == 'video') echo '<i class="bi bi-play-circle-fill text-danger"></i> '; ?>
                                     <?php echo htmlspecialchars($row['title']); ?>
                                 </h5>
                                 <p class="text-muted">
@@ -121,7 +134,7 @@ if (isset($_SESSION['user_id'])) {
                                 <hr>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-primary fw-bold">
-                                        <i class="bi bi-person-circle me-1"></i> 
+                                        <i class="bi bi-person-circle me-1"></i>
                                         <?php echo htmlspecialchars($row['username']); ?>
                                     </small>
                                     <small class="text-muted">
@@ -132,14 +145,15 @@ if (isset($_SESSION['user_id'])) {
                             </div>
                         </div>
                     </div>
-                    <?php
+            <?php
                 }
             } else {
                 echo '<p class="text-center text-white">Không tìm thấy bài viết nào.</p>';
             }
-            ?>        
+            ?>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

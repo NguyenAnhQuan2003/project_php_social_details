@@ -156,19 +156,28 @@ if (isset($_SESSION['user_id'])) {
                     $comment_count = mysqli_fetch_assoc($comment_count_result)['count'];
             ?>
                     <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="post-card h-100">
-                            <?php if ($row['type'] == 'video'): ?>
+                        <div class="post-card h-100 d-flex flex-column">
+                            <?php if ($row['type'] == 'video' && !empty($row['video_url'])): ?>
+                                <video class="w-100" style="height: 250px; object-fit: cover; background: #000;" controls>
+                                    <source src="./uploads/<?php echo htmlspecialchars($row['video_url']); ?>" type="video/mp4">
+                                </video>
+                            <?php elseif ($row['type'] == 'video'): ?>
                                 <img src="https://via.placeholder.com/400x200?text=VIDEO+POST" class="w-100">
                             <?php else: ?>
-                                <img src="https://via.placeholder.com/400x200?text=News" class="w-100">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 250px; display: flex; align-items: center; justify-content: center;">
+                                    <div class="text-white text-center p-3">
+                                        <i class="bi bi-file-text-fill" style="font-size: 3rem;"></i>
+                                    </div>
+                                </div>
                             <?php endif; ?>
-                            <div class="p-3">
+                            <div class="p-3 flex-grow-1 d-flex flex-column">
                                 <h5 class="fw-bold">
                                     <?php if ($row['type'] == 'video') echo '<i class="bi bi-play-circle-fill text-danger"></i> '; ?>
+                                    <?php if ($row['type'] == 'text') echo '<i class="bi bi-file-text-fill text-primary"></i> '; ?>
                                     <?php echo htmlspecialchars($row['title']); ?>
                                 </h5>
-                                <p class="text-muted">
-                                    <?php echo mb_strimwidth(htmlspecialchars($row['content']), 0, 45, "..."); ?>
+                                <p class="text-muted flex-grow-1" style="word-wrap: break-word; overflow-wrap: break-word;">
+                                    <?php echo mb_strimwidth(htmlspecialchars($row['content']), 0, 100, "..."); ?>
                                 </p>
                                 <hr>
                                 <div class="d-flex justify-content-between align-items-center mb-3">

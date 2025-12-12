@@ -9,6 +9,7 @@ if (isset($_SESSION['user_id'])) {
 ?>
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,6 +64,7 @@ if (isset($_SESSION['user_id'])) {
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
@@ -76,11 +78,47 @@ if (isset($_SESSION['user_id'])) {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="ms-auto d-flex align-items-center">
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <span class="me-3 fw-bold text-dark">Hi, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                        <a href="./auth/logout.php" class="btn btn-outline-danger btn-sm">Đăng Xuất</a>
+
+                        <div class="dropdown">
+                            <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle fs-5 text-primary"></i>
+                                <span class="fw-bold text-dark">
+                                    <?php echo htmlspecialchars($_SESSION['username']); ?>
+                                </span>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
+                                <li>
+                                    <h6 class="dropdown-header">Tài khoản của tôi</h6>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item py-2" href="./user/profile.php">
+                                        <i class="bi bi-gear-wide-connected me-2 text-secondary"></i> Cài đặt tài khoản
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item py-2" href="./auth/change_password.php">
+                                        <i class="bi bi-key-fill me-2 text-warning"></i> Đổi mật khẩu
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item py-2 text-danger fw-bold" href="./auth/logout.php">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Đăng Xuất
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                     <?php else: ?>
-                        <a href="./auth/login.php" class="btn btn-outline-primary me-2">Đăng Nhập</a>
-                        <a href="./auth/register.php" class="btn btn-primary">Đăng Ký</a>
+                        <a href="./auth/login.php" class="btn btn-outline-primary me-2 rounded-pill px-4">Đăng Nhập</a>
+                        <a href="./auth/register.php" class="btn btn-primary rounded-pill px-4">Đăng Ký</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -165,4 +203,5 @@ if (isset($_SESSION['user_id'])) {
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

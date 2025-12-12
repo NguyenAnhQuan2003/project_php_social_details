@@ -119,7 +119,11 @@ if (isset($_SESSION['user_id'])) {
             ?>
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="post-card h-100">
-                            <?php if ($row['type'] == 'video'): ?>
+                            <?php if ($row['type'] == 'video' && !empty($row['video_url'])): ?>
+                                <video class="w-100" style="height: 250px; object-fit: cover; background: #000;" controls>
+                                    <source src="./uploads/<?php echo htmlspecialchars($row['video_url']); ?>" type="video/mp4">
+                                </video>
+                            <?php elseif ($row['type'] == 'video'): ?>
                                 <img src="https://via.placeholder.com/400x200?text=VIDEO+POST" class="w-100">
                             <?php else: ?>
                                 <img src="https://via.placeholder.com/400x200?text=News" class="w-100">

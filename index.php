@@ -9,7 +9,6 @@ if (isset($_SESSION['user_id'])) {
 ?>
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,7 +63,6 @@ if (isset($_SESSION['user_id'])) {
         }
     </style>
 </head>
-
 <body>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
@@ -115,6 +113,9 @@ if (isset($_SESSION['user_id'])) {
             $query = mysqli_query($conn, $sql);
             if (mysqli_num_rows($query) > 0) {
                 while ($row = mysqli_fetch_assoc($query)) {
+                    $comment_count_sql = "SELECT COUNT(*) as count FROM comments WHERE post_id = " . $row['id'];
+                    $comment_count_result = mysqli_query($conn, $comment_count_sql);
+                    $comment_count = mysqli_fetch_assoc($comment_count_result)['count'];
             ?>
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="post-card h-100">
@@ -129,10 +130,10 @@ if (isset($_SESSION['user_id'])) {
                                     <?php echo htmlspecialchars($row['title']); ?>
                                 </h5>
                                 <p class="text-muted">
-                                    <?php echo mb_strimwidth(htmlspecialchars($row['content']), 0, 100, "..."); ?>
+                                    <?php echo mb_strimwidth(htmlspecialchars($row['content']), 0, 45, "..."); ?>
                                 </p>
                                 <hr>
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
                                     <small class="text-primary fw-bold">
                                         <i class="bi bi-person-circle me-1"></i>
                                         <?php echo htmlspecialchars($row['username']); ?>
@@ -142,6 +143,15 @@ if (isset($_SESSION['user_id'])) {
                                         <?php echo date('d/m/Y', strtotime($row['created_at'])); ?>
                                     </small>
                                 </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-info">
+                                        <i class="bi bi-chat-dots me-1"></i>
+                                        <?php echo $comment_count; ?> bình luận
+                                    </small>
+                                </div>
+                                <a href="./posts/detailed_post.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-sm w-100">
+                                    <i class="bi bi-eye me-2"></i>Xem chi tiết
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -155,5 +165,4 @@ if (isset($_SESSION['user_id'])) {
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

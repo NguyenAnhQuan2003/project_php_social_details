@@ -62,6 +62,25 @@ if (isset($_SESSION['user_id'])) {
         .post-card:hover {
             transform: translateY(-5px);
         }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            margin-top: auto;
+            /* Đẩy footer xuống đáy */
+            padding-top: 3rem;
+            padding-bottom: 1rem;
+        }
+
+        .footer a {
+            text-decoration: none;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: #6a11cb;
+        }
     </style>
 </head>
 
@@ -69,8 +88,10 @@ if (isset($_SESSION['user_id'])) {
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <img src="https://img.freepik.com/premium-vector/play-button-media-music-icon-logo-design-colorful-media-play-technology-logo-element-music-audio-streaming-service-app-video-icon-logo_144543-1677.jpg" alt="ShareHub Logo" class="logo-img">
-                <span class="ms-2 fw-bold fs-4 text-primary">QQ social</span>
+                <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(106, 17, 203, 0.3);">
+                    <span style="color: white; font-weight: 900; font-family: sans-serif; font-size: 20px; letter-spacing: -1px;">QQ</span>
+                </div>
+                <span class="ms-2 fw-bold fs-4 text-primary">Education</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -126,8 +147,8 @@ if (isset($_SESSION['user_id'])) {
     </nav>
     <section class="hero-section">
         <div class="container">
-            <h1 class="display-3 fw-bold mb-4">Chào mừng đến QQ social</h1>
-            <p class="lead mb-5">Nơi chia sẻ bài viết, video và kết nối với mọi người</p>
+            <h1 class="display-3 fw-bold mb-4">Chào mừng đến QQ Education</h1>
+            <p class="lead mb-5">Nơi chia sẻ bài viết, video học liệu và kết nối với mọi người</p>
             <a href="<?php echo $link_action; ?>" class="btn btn-light text-primary fw-bold btn-lg">Bắt Đầu Đăng Bài Ngay</a>
         </div>
     </section>
@@ -210,6 +231,57 @@ if (isset($_SESSION['user_id'])) {
             ?>
         </div>
     </div>
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <a href="#" class="d-flex align-items-center mb-3 text-decoration-none">
+                        <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(106, 17, 203, 0.3);">
+                            <span style="color: white; font-weight: 900; font-family: sans-serif; font-size: 20px; letter-spacing: -1px;">QQ</span>
+                        </div>
+                        <span class="fs-4 fw-bold text-primary ms-2">Education</span>
+                    </a>
+                    <p class="text-muted">
+                        Nền tảng mạng xã hội giáo dục hàng đầu, nơi chia sẻ kiến thức, tài liệu và video học tập bổ ích cho cộng đồng.
+                    </p>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">Liên kết nhanh</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="index.php"><i class="bi bi-chevron-right small me-2"></i>Trang chủ</a></li>
+                        <li class="mb-2"><a href="#"><i class="bi bi-chevron-right small me-2"></i>Về chúng tôi</a></li>
+                        <li class="mb-2"><a href="#"><i class="bi bi-chevron-right small me-2"></i>Điều khoản sử dụng</a></li>
+                        <li class="mb-2"><a href="#"><i class="bi bi-chevron-right small me-2"></i>Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-12">
+                    <h5 class="fw-bold mb-3">Liên hệ hỗ trợ</h5>
+                    <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill text-primary me-2"></i> Hà Nội, Việt Nam</p>
+                    <p class="text-muted mb-2"><i class="bi bi-telephone-fill text-primary me-2"></i> 0912.345.678</p>
+                    <p class="text-muted mb-3"><i class="bi bi-envelope-fill text-primary me-2"></i> contact@qqeducation.com</p>
+
+                    <div class="d-flex gap-3">
+                        <a href="#" class="fs-4 text-primary"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="fs-4 text-danger"><i class="bi bi-youtube"></i></a>
+                        <a href="#" class="fs-4 text-info"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start text-muted">
+                    &copy; 2026 <strong>QQ Education</strong>. All Rights Reserved.
+                </div>
+                <div class="col-md-6 text-center text-md-end text-muted">
+                    Designed by Quan & Quoc
+                </div>
+            </div>
+        </div>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

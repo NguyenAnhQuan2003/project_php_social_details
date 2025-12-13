@@ -50,6 +50,22 @@ if ($user) {
     $_SESSION['role_level'] = $user['role_level'];
     $_SESSION['email']      = $user['email']; // Lưu luôn email nếu cần dùng
 }
+
+// --- 3. LẤY DANH SÁCH QUY­ỀN (ROLES) TỪ DATABASE ---
+$sql_roles = "SELECT id, role_name, role_level, description FROM roles ORDER BY role_level ASC";
+$result_roles = mysqli_query($conn, $sql_roles);
+$roles = mysqli_fetch_all($result_roles, MYSQLI_ASSOC);
+
+// Lấy tên role của user hiện tại
+$current_role_name = "";
+if (!empty($roles)) {
+    foreach ($roles as $role) {
+        if ($role['id'] == $user['role_id']) {
+            $current_role_name = $role['role_name'];
+            break;
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -174,9 +190,11 @@ if ($user) {
                         <a class="list-group-item list-group-item-action active" id="user-tab" data-bs-toggle="list" href="#user-settings" role="tab">
                             <i class="bi bi-person-gear me-3"></i>Cài đặt User
                         </a>
+                        <?php if ($user['role_id'] == 4): ?>
                         <a class="list-group-item list-group-item-action" id="role-tab" data-bs-toggle="list" href="#role-settings" role="tab">
                             <i class="bi bi-shield-lock me-3"></i>Cài đặt Quyền (Role)
                         </a>
+                        <?php endif; ?>
                         <a class="list-group-item list-group-item-action" id="noti-tab" data-bs-toggle="list" href="#noti-settings" role="tab">
                             <i class="bi bi-bell me-3"></i>Thông báo
                         </a>
@@ -225,7 +243,7 @@ if ($user) {
                                     <div class="alert alert-info d-flex align-items-center" role="alert">
                                         <i class="bi bi-info-circle-fill me-2 fs-4"></i>
                                         <div>
-                                            Bạn đang giữ Role ID: <strong><?php echo $user['role_id']; ?></strong><br>
+                                            Bạn đang giữ Role ID: <strong><?php echo $user['role_id']; ?> (<?php echo htmlspecialchars($current_role_name); ?>)</strong><br>
                                             <small>Role Level: <?php echo $user['role_level']; ?></small>
                                         </div>
                                     </div>
@@ -239,6 +257,7 @@ if ($user) {
                             </form>
                         </div>
 
+                        <?php if ($user['role_id'] == 4): ?>
                         <div class="tab-pane fade" id="role-settings" role="tabpanel">
                             <div class="content-header d-flex justify-content-between align-items-center">
                                 <div>
@@ -262,20 +281,30 @@ if ($user) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>1</td>
-                                            <td><span class="badge bg-primary">Admin</span></td>
-                                            <td>10</td>
-                                            <td>Quản trị viên cao cấp.</td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
-                                                <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
-                                            </td>
-                                        </tr>
+                                        <?php if (!empty($roles)): ?>
+                                            <?php foreach ($roles as $role): ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($role['id']); ?></td>
+                                                    <td><span class="badge bg-primary"><?php echo htmlspecialchars($role['role_name']); ?></span></td>
+                                                    <td><?php echo htmlspecialchars($role['role_level']); ?></td>
+                                                    <td><?php echo htmlspecialchars($role['description']); ?></td>
+                                                    <td class="text-center">
+                                                        <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
+                                                        <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">Không có quyền nào trong hệ thống.</td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+                        <?php endif; ?>
+
 
                         <div class="tab-pane fade" id="noti-settings" role="tabpanel">
                             <div class="content-header">

@@ -196,9 +196,9 @@ if (!empty($roles)) {
                             <i class="bi bi-person-gear me-3"></i>Cài đặt User
                         </a>
                         <?php if ($user['role_id'] == 4): ?>
-                        <a class="list-group-item list-group-item-action" id="role-tab" data-bs-toggle="list" href="#role-settings" role="tab">
-                            <i class="bi bi-shield-lock me-3"></i>Cài đặt Quyền (Role)
-                        </a>
+                            <a class="list-group-item list-group-item-action" id="role-tab" data-bs-toggle="list" href="#role-settings" role="tab">
+                                <i class="bi bi-shield-lock me-3"></i>Cài đặt Quyền (Role)
+                            </a>
                         <?php endif; ?>
                         <a class="list-group-item list-group-item-action" id="noti-tab" data-bs-toggle="list" href="#noti-settings" role="tab">
                             <i class="bi bi-bell me-3"></i>Thông báo
@@ -263,51 +263,51 @@ if (!empty($roles)) {
                         </div>
 
                         <?php if ($user['role_id'] == 4): ?>
-                        <div class="tab-pane fade" id="role-settings" role="tabpanel">
-                            <div class="content-header d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h3>Cấu hình Phân quyền</h3>
-                                    <p class="text-muted small">Danh sách các nhóm quyền trong hệ thống.</p>
+                            <div class="tab-pane fade" id="role-settings" role="tabpanel">
+                                <div class="content-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3>Cấu hình Phân quyền</h3>
+                                        <p class="text-muted small">Danh sách các nhóm quyền trong hệ thống.</p>
+                                    </div>
+                                    <button class="btn btn-success btn-sm fw-bold">
+                                        <i class="bi bi-plus-lg"></i> Thêm Quyền Mới
+                                    </button>
                                 </div>
-                                <button class="btn btn-success btn-sm fw-bold">
-                                    <i class="bi bi-plus-lg"></i> Thêm Quyền Mới
-                                </button>
-                            </div>
 
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th width="5%">ID</th>
-                                            <th width="20%">Tên Quyền</th>
-                                            <th width="10%">Level</th>
-                                            <th width="45%">Mô tả</th>
-                                            <th width="20%" class="text-center">Thao tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (!empty($roles)): ?>
-                                            <?php foreach ($roles as $role): ?>
-                                                <tr>
-                                                    <td><?php echo htmlspecialchars($role['id']); ?></td>
-                                                    <td><span class="badge bg-primary"><?php echo htmlspecialchars($role['role_name']); ?></span></td>
-                                                    <td><?php echo htmlspecialchars($role['role_level']); ?></td>
-                                                    <td><?php echo htmlspecialchars($role['description']); ?></td>
-                                                    <td class="text-center">
-                                                        <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
-                                                        <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead>
                                             <tr>
-                                                <td colspan="5" class="text-center text-muted py-4">Không có quyền nào trong hệ thống.</td>
+                                                <th width="5%">ID</th>
+                                                <th width="20%">Tên Quyền</th>
+                                                <th width="10%">Level</th>
+                                                <th width="45%">Mô tả</th>
+                                                <th width="20%" class="text-center">Thao tác</th>
                                             </tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (!empty($roles)): ?>
+                                                <?php foreach ($roles as $role): ?>
+                                                    <tr>
+                                                        <td><?php echo htmlspecialchars($role['id']); ?></td>
+                                                        <td><span class="badge bg-primary"><?php echo htmlspecialchars($role['role_name']); ?></span></td>
+                                                        <td><?php echo htmlspecialchars($role['role_level']); ?></td>
+                                                        <td><?php echo htmlspecialchars($role['description']); ?></td>
+                                                        <td class="text-center">
+                                                            <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
+                                                            <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted py-4">Không có quyền nào trong hệ thống.</td>
+                                                </tr>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
 
 

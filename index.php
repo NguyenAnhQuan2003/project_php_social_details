@@ -6,6 +6,12 @@ if (isset($_SESSION['user_id'])) {
 } else {
     $link_action = "./auth/register.php";
 }
+
+// [PHÂN TRANG 1] Cấu hình số lượng bài trên mỗi trang
+$limit = 6; // Số bài hiển thị mỗi trang (bạn có thể sửa số này)
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -36,7 +42,6 @@ if (isset($_SESSION['user_id'])) {
 
         .hero-section {
             min-height: 50vh;
-            /* Giảm chiều cao một chút để nhường chỗ cho search */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -82,7 +87,6 @@ if (isset($_SESSION['user_id'])) {
             color: #6a11cb;
         }
 
-        /* CSS cho thanh tìm kiếm */
         .search-bar {
             background: white;
             border-radius: 50px;
@@ -94,6 +98,25 @@ if (isset($_SESSION['user_id'])) {
             border: none;
             outline: none;
             box-shadow: none !important;
+        }
+
+        /* CSS cho Pagination */
+        .page-link {
+            color: #6a11cb;
+            border: none;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .page-item.active .page-link {
+            background-color: #6a11cb;
+            border-color: #6a11cb;
+        }
+
+        .page-link:hover {
+            color: #2575fc;
+            background-color: #e9ecef;
         }
     </style>
 </head>
@@ -113,7 +136,6 @@ if (isset($_SESSION['user_id'])) {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="ms-auto d-flex align-items-center">
                     <?php if (isset($_SESSION['user_id'])): ?>
-
                         <div class="dropdown">
                             <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-circle fs-5 text-primary"></i>
@@ -121,36 +143,18 @@ if (isset($_SESSION['user_id'])) {
                                     <?php echo htmlspecialchars($_SESSION['username']); ?>
                                 </span>
                             </button>
-
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
                                 <li>
                                     <h6 class="dropdown-header">Tài khoản của tôi</h6>
                                 </li>
-
-                                <li>
-                                    <a class="dropdown-item py-2" href="./user/profile.php">
-                                        <i class="bi bi-gear-wide-connected me-2 text-secondary"></i> Cài đặt tài khoản
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a class="dropdown-item py-2" href="./auth/change_password.php">
-                                        <i class="bi bi-key-fill me-2 text-warning"></i> Đổi mật khẩu
-                                    </a>
-                                </li>
-
+                                <li><a class="dropdown-item py-2" href="./user/profile.php"><i class="bi bi-gear-wide-connected me-2 text-secondary"></i> Cài đặt tài khoản</a></li>
+                                <li><a class="dropdown-item py-2" href="./auth/change_password.php"><i class="bi bi-key-fill me-2 text-warning"></i> Đổi mật khẩu</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-
-                                <li>
-                                    <a class="dropdown-item py-2 text-danger fw-bold" href="./auth/logout.php">
-                                        <i class="bi bi-box-arrow-right me-2"></i> Đăng Xuất
-                                    </a>
-                                </li>
+                                <li><a class="dropdown-item py-2 text-danger fw-bold" href="./auth/logout.php"><i class="bi bi-box-arrow-right me-2"></i> Đăng Xuất</a></li>
                             </ul>
                         </div>
-
                     <?php else: ?>
                         <a href="./auth/login.php" class="btn btn-outline-primary me-2 rounded-pill px-4">Đăng Nhập</a>
                         <a href="./auth/register.php" class="btn btn-primary rounded-pill px-4">Đăng Ký</a>
@@ -175,7 +179,6 @@ if (isset($_SESSION['user_id'])) {
                     <?php if (isset($_GET['type'])): ?>
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($_GET['type']); ?>">
                     <?php endif; ?>
-
                     <input type="text" name="search" class="form-control form-control-lg search-input ps-4"
                         placeholder="Bạn muốn tìm gì hôm nay?"
                         value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
@@ -188,13 +191,10 @@ if (isset($_SESSION['user_id'])) {
 
         <div class="mb-4 d-flex justify-content-center">
             <?php $search_param = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>
-
             <a href="index.php?<?php echo substr($search_param, 1); ?>"
                 class="btn btn-outline-light me-2 <?php echo !isset($_GET['type']) ? 'active' : ''; ?>">Tất cả</a>
-
             <a href="index.php?type=text<?php echo $search_param; ?>"
                 class="btn btn-outline-light me-2 <?php echo (isset($_GET['type']) && $_GET['type'] == 'text') ? 'active' : ''; ?>">Bài viết</a>
-
             <a href="index.php?type=video<?php echo $search_param; ?>"
                 class="btn btn-outline-light <?php echo (isset($_GET['type']) && $_GET['type'] == 'video') ? 'active' : ''; ?>">Video</a>
         </div>
@@ -202,17 +202,13 @@ if (isset($_SESSION['user_id'])) {
         <div class="row">
             <?php
             $type_filter = $_GET['type'] ?? '';
-            $search_query = $_GET['search'] ?? ''; // Lấy từ khóa tìm kiếm
+            $search_query = $_GET['search'] ?? '';
             $user_role = $_SESSION['role_level'] ?? 1;
 
-            $sql = "SELECT posts.*, users.username 
-                    FROM posts 
-                    JOIN users ON posts.user_id = users.id";
-
-            // Xây dựng điều kiện WHERE
+            // Xây dựng điều kiện WHERE (Dùng chung cho cả đếm tổng và lấy dữ liệu)
             $where_conditions = [];
 
-            // 1. Điều kiện về Quyền hạn
+            // 1. Điều kiện Quyền
             if ($user_role >= 3) {
                 // Owner/Moderator thấy hết
             } elseif ($user_role == 2) {
@@ -222,30 +218,39 @@ if (isset($_SESSION['user_id'])) {
                 $where_conditions[] = "posts.status = 1";
             }
 
-            // 2. Điều kiện về Loại bài (Type)
+            // 2. Điều kiện Loại
             if ($type_filter == 'text' || $type_filter == 'video') {
                 $safe_type = mysqli_real_escape_string($conn, $type_filter);
                 $where_conditions[] = "posts.type = '$safe_type'";
             }
 
-            // 3. [MỚI] Điều kiện về Tìm kiếm (Search)
+            // 3. Điều kiện Tìm kiếm
             if (!empty($search_query)) {
                 $safe_search = mysqli_real_escape_string($conn, $search_query);
-                // Tìm trong Tiêu đề HOẶC Nội dung
                 $where_conditions[] = "(posts.title LIKE '%$safe_search%' OR posts.content LIKE '%$safe_search%')";
             }
 
-            // Gộp các điều kiện lại
+            // --- [PHÂN TRANG 2] TÍNH TỔNG SỐ TRANG ---
+            $sql_count = "SELECT COUNT(*) as total FROM posts JOIN users ON posts.user_id = users.id";
+            if (!empty($where_conditions)) {
+                $sql_count .= " WHERE " . implode(" AND ", $where_conditions);
+            }
+            $query_count = mysqli_query($conn, $sql_count);
+            $row_count = mysqli_fetch_assoc($query_count);
+            $total_records = $row_count['total'];
+            $total_pages = ceil($total_records / $limit);
+            // -------------------------------------------
+
+            // --- LẤY DỮ LIỆU CÓ LIMIT ---
+            $sql = "SELECT posts.*, users.username FROM posts JOIN users ON posts.user_id = users.id";
             if (!empty($where_conditions)) {
                 $sql .= " WHERE " . implode(" AND ", $where_conditions);
             }
-
-            $sql .= " ORDER BY posts.created_at DESC";
+            $sql .= " ORDER BY posts.created_at DESC LIMIT $offset, $limit"; // Thêm LIMIT vào cuối
             $query = mysqli_query($conn, $sql);
 
             if ($query && mysqli_num_rows($query) > 0) {
                 while ($row = mysqli_fetch_assoc($query)) {
-                    // Logic đếm comment
                     $comment_count_sql = "SELECT COUNT(*) as count FROM comments WHERE post_id = " . $row['id'];
                     $comment_count_result = mysqli_query($conn, $comment_count_sql);
                     $comment_count = mysqli_fetch_assoc($comment_count_result)['count'];
@@ -270,7 +275,6 @@ if (isset($_SESSION['user_id'])) {
                                     <?php if ($row['type'] == 'video') echo '<i class="bi bi-play-circle-fill text-danger"></i> '; ?>
                                     <?php if ($row['type'] == 'text') echo '<i class="bi bi-file-text-fill text-primary"></i> '; ?>
                                     <?php
-                                    // Highlight từ khóa tìm kiếm (nếu có)
                                     $title_display = htmlspecialchars($row['title']);
                                     if (!empty($search_query)) {
                                         $title_display = preg_replace('/(' . preg_quote($search_query, '/') . ')/i', '<span class="bg-warning text-dark">$1</span>', $title_display);
@@ -279,7 +283,6 @@ if (isset($_SESSION['user_id'])) {
                                     ?>
                                 </h5>
                                 <?php
-                                // Badge status (Code cũ của bạn)
                                 $user_role = $_SESSION['role_level'] ?? 1;
                                 $show_status = false;
                                 if ($user_role >= 3) {
@@ -320,7 +323,6 @@ if (isset($_SESSION['user_id'])) {
                                     <i class="bi bi-eye me-2"></i>Xem chi tiết
                                 </a>
                                 <?php
-                                // Nút duyệt (Code cũ của bạn)
                                 if ($user_role >= 3) {
                                     echo '<div class="d-flex gap-2 mt-2">';
                                     if ($row['status'] != 1) echo '<a href="./posts/approve_post.php?id=' . $row['id'] . '" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-check-lg me-1"></i>Duyệt</a>';
@@ -336,12 +338,46 @@ if (isset($_SESSION['user_id'])) {
             } else {
                 echo '<div class="col-12 text-center text-white">
                         <h3><i class="bi bi-search"></i></h3>
-                        <p>Không tìm thấy bài viết nào phù hợp với từ khóa "' . htmlspecialchars($search_query) . '".</p>
+                        <p>Không tìm thấy bài viết nào phù hợp.</p>
                       </div>';
             }
             ?>
         </div>
+
+        <?php if ($total_pages > 1): ?>
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    <?php
+                    $url_params = "";
+                    if (isset($_GET['type'])) $url_params .= "&type=" . urlencode($_GET['type']);
+                    if (isset($_GET['search'])) $url_params .= "&search=" . urlencode($_GET['search']);
+                    ?>
+
+                    <li class="page-item <?php if ($page <= 1) echo 'disabled'; ?>">
+                        <a class="page-link" href="?page=<?php echo $page - 1; ?><?php echo $url_params; ?>">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                        <li class="page-item <?php if ($page == $i) echo 'active'; ?>">
+                            <a class="page-link" href="?page=<?php echo $i; ?><?php echo $url_params; ?>">
+                                <?php echo $i; ?>
+                            </a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <li class="page-item <?php if ($page >= $total_pages) echo 'disabled'; ?>">
+                        <a class="page-link" href="?page=<?php echo $page + 1; ?><?php echo $url_params; ?>">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        <?php endif; ?>
+
     </div>
+
     <footer class="footer">
         <div class="container">
             <div class="row">

@@ -35,7 +35,8 @@ if (isset($_SESSION['user_id'])) {
         }
 
         .hero-section {
-            min-height: 60vh;
+            min-height: 50vh;
+            /* Giảm chiều cao một chút để nhường chỗ cho search */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -67,7 +68,6 @@ if (isset($_SESSION['user_id'])) {
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             margin-top: auto;
-            /* Đẩy footer xuống đáy */
             padding-top: 3rem;
             padding-bottom: 1rem;
         }
@@ -80,6 +80,20 @@ if (isset($_SESSION['user_id'])) {
 
         .footer a:hover {
             color: #6a11cb;
+        }
+
+        /* CSS cho thanh tìm kiếm */
+        .search-bar {
+            background: white;
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-input {
+            border: none;
+            outline: none;
+            box-shadow: none !important;
         }
     </style>
 </head>
@@ -152,26 +166,86 @@ if (isset($_SESSION['user_id'])) {
             <a href="<?php echo $link_action; ?>" class="btn btn-light text-primary fw-bold btn-lg">Bắt Đầu Đăng Bài Ngay</a>
         </div>
     </section>
+
     <div class="container my-5">
-        <div class="mb-4 d-flex justify-content-center">
-            <a href="index.php" class="btn btn-outline-light me-2 <?php echo !isset($_GET['type']) ? 'active' : ''; ?>">Tất cả</a>
-            <a href="index.php?type=text" class="btn btn-outline-light me-2 <?php echo (isset($_GET['type']) && $_GET['type'] == 'text') ? 'active' : ''; ?>">Bài viết</a>
-            <a href="index.php?type=video" class="btn btn-outline-light <?php echo (isset($_GET['type']) && $_GET['type'] == 'video') ? 'active' : ''; ?>">Video</a>
+
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 col-lg-6">
+                <form action="index.php" method="GET" class="search-bar d-flex align-items-center">
+                    <?php if (isset($_GET['type'])): ?>
+                        <input type="hidden" name="type" value="<?php echo htmlspecialchars($_GET['type']); ?>">
+                    <?php endif; ?>
+
+                    <input type="text" name="search" class="form-control form-control-lg search-input ps-4"
+                        placeholder="Bạn muốn tìm gì hôm nay?"
+                        value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 m-1">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+            </div>
         </div>
+
+        <div class="mb-4 d-flex justify-content-center">
+            <?php $search_param = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : ''; ?>
+
+            <a href="index.php?<?php echo substr($search_param, 1); ?>"
+                class="btn btn-outline-light me-2 <?php echo !isset($_GET['type']) ? 'active' : ''; ?>">Tất cả</a>
+
+            <a href="index.php?type=text<?php echo $search_param; ?>"
+                class="btn btn-outline-light me-2 <?php echo (isset($_GET['type']) && $_GET['type'] == 'text') ? 'active' : ''; ?>">Bài viết</a>
+
+            <a href="index.php?type=video<?php echo $search_param; ?>"
+                class="btn btn-outline-light <?php echo (isset($_GET['type']) && $_GET['type'] == 'video') ? 'active' : ''; ?>">Video</a>
+        </div>
+
         <div class="row">
             <?php
             $type_filter = $_GET['type'] ?? '';
+            $search_query = $_GET['search'] ?? ''; // Lấy từ khóa tìm kiếm
+            $user_role = $_SESSION['role_level'] ?? 1;
+
             $sql = "SELECT posts.*, users.username 
                     FROM posts 
                     JOIN users ON posts.user_id = users.id";
+
+            // Xây dựng điều kiện WHERE
+            $where_conditions = [];
+
+            // 1. Điều kiện về Quyền hạn
+            if ($user_role >= 3) {
+                // Owner/Moderator thấy hết
+            } elseif ($user_role == 2) {
+                $user_id = $_SESSION['user_id'];
+                $where_conditions[] = "(posts.status = 1 OR (posts.user_id = $user_id AND posts.status IN (0, -1)))";
+            } else {
+                $where_conditions[] = "posts.status = 1";
+            }
+
+            // 2. Điều kiện về Loại bài (Type)
             if ($type_filter == 'text' || $type_filter == 'video') {
                 $safe_type = mysqli_real_escape_string($conn, $type_filter);
-                $sql .= " WHERE posts.type = '$safe_type'";
+                $where_conditions[] = "posts.type = '$safe_type'";
             }
+
+            // 3. [MỚI] Điều kiện về Tìm kiếm (Search)
+            if (!empty($search_query)) {
+                $safe_search = mysqli_real_escape_string($conn, $search_query);
+                // Tìm trong Tiêu đề HOẶC Nội dung
+                $where_conditions[] = "(posts.title LIKE '%$safe_search%' OR posts.content LIKE '%$safe_search%')";
+            }
+
+            // Gộp các điều kiện lại
+            if (!empty($where_conditions)) {
+                $sql .= " WHERE " . implode(" AND ", $where_conditions);
+            }
+
             $sql .= " ORDER BY posts.created_at DESC";
             $query = mysqli_query($conn, $sql);
-            if (mysqli_num_rows($query) > 0) {
+
+            if ($query && mysqli_num_rows($query) > 0) {
                 while ($row = mysqli_fetch_assoc($query)) {
+                    // Logic đếm comment
                     $comment_count_sql = "SELECT COUNT(*) as count FROM comments WHERE post_id = " . $row['id'];
                     $comment_count_result = mysqli_query($conn, $comment_count_sql);
                     $comment_count = mysqli_fetch_assoc($comment_count_result)['count'];
@@ -195,8 +269,33 @@ if (isset($_SESSION['user_id'])) {
                                 <h5 class="fw-bold">
                                     <?php if ($row['type'] == 'video') echo '<i class="bi bi-play-circle-fill text-danger"></i> '; ?>
                                     <?php if ($row['type'] == 'text') echo '<i class="bi bi-file-text-fill text-primary"></i> '; ?>
-                                    <?php echo htmlspecialchars($row['title']); ?>
+                                    <?php
+                                    // Highlight từ khóa tìm kiếm (nếu có)
+                                    $title_display = htmlspecialchars($row['title']);
+                                    if (!empty($search_query)) {
+                                        $title_display = preg_replace('/(' . preg_quote($search_query, '/') . ')/i', '<span class="bg-warning text-dark">$1</span>', $title_display);
+                                    }
+                                    echo $title_display;
+                                    ?>
                                 </h5>
+                                <?php
+                                // Badge status (Code cũ của bạn)
+                                $user_role = $_SESSION['role_level'] ?? 1;
+                                $show_status = false;
+                                if ($user_role >= 3) {
+                                    $show_status = true;
+                                } elseif ($user_role == 2 && $row['status'] != 1) {
+                                    if ($row['user_id'] == $_SESSION['user_id']) {
+                                        $show_status = true;
+                                    }
+                                }
+
+                                if ($show_status) {
+                                    if ($row['status'] == 1) echo '<span class="badge bg-success mb-2">✓ Đã duyệt</span>';
+                                    elseif ($row['status'] == 0) echo '<span class="badge bg-warning mb-2">⏳ Chờ duyệt</span>';
+                                    elseif ($row['status'] == -1) echo '<span class="badge bg-danger mb-2">✗ Bị từ chối</span>';
+                                }
+                                ?>
                                 <p class="text-muted flex-grow-1" style="word-wrap: break-word; overflow-wrap: break-word;">
                                     <?php echo mb_strimwidth(htmlspecialchars($row['content']), 0, 100, "..."); ?>
                                 </p>
@@ -220,13 +319,25 @@ if (isset($_SESSION['user_id'])) {
                                 <a href="./posts/detailed_post.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-sm w-100">
                                     <i class="bi bi-eye me-2"></i>Xem chi tiết
                                 </a>
+                                <?php
+                                // Nút duyệt (Code cũ của bạn)
+                                if ($user_role >= 3) {
+                                    echo '<div class="d-flex gap-2 mt-2">';
+                                    if ($row['status'] != 1) echo '<a href="./posts/approve_post.php?id=' . $row['id'] . '" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-check-lg me-1"></i>Duyệt</a>';
+                                    if ($row['status'] != -1) echo '<a href="./posts/reject_post.php?id=' . $row['id'] . '" class="btn btn-danger btn-sm flex-grow-1"><i class="bi bi-x-lg me-1"></i>Từ chối</a>';
+                                    echo '</div>';
+                                }
+                                ?>
                             </div>
                         </div>
                     </div>
             <?php
                 }
             } else {
-                echo '<p class="text-center text-white">Không tìm thấy bài viết nào.</p>';
+                echo '<div class="col-12 text-center text-white">
+                        <h3><i class="bi bi-search"></i></h3>
+                        <p>Không tìm thấy bài viết nào phù hợp với từ khóa "' . htmlspecialchars($search_query) . '".</p>
+                      </div>';
             }
             ?>
         </div>
@@ -241,44 +352,23 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                         <span class="fs-4 fw-bold text-primary ms-2">Education</span>
                     </a>
-                    <p class="text-muted">
-                        Nền tảng mạng xã hội giáo dục hàng đầu, nơi chia sẻ kiến thức, tài liệu và video học tập bổ ích cho cộng đồng.
-                    </p>
+                    <p class="text-muted">Nền tảng mạng xã hội giáo dục hàng đầu.</p>
                 </div>
-
                 <div class="col-lg-4 col-md-6 mb-4">
                     <h5 class="fw-bold mb-3">Liên kết nhanh</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="index.php"><i class="bi bi-chevron-right small me-2"></i>Trang chủ</a></li>
-                        <li class="mb-2"><a href="#"><i class="bi bi-chevron-right small me-2"></i>Về chúng tôi</a></li>
-                        <li class="mb-2"><a href="#"><i class="bi bi-chevron-right small me-2"></i>Điều khoản sử dụng</a></li>
-                        <li class="mb-2"><a href="#"><i class="bi bi-chevron-right small me-2"></i>Chính sách bảo mật</a></li>
                     </ul>
                 </div>
-
                 <div class="col-lg-4 col-md-12">
                     <h5 class="fw-bold mb-3">Liên hệ hỗ trợ</h5>
-                    <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill text-primary me-2"></i> Hà Nội, Việt Nam</p>
-                    <p class="text-muted mb-2"><i class="bi bi-telephone-fill text-primary me-2"></i> 0912.345.678</p>
-                    <p class="text-muted mb-3"><i class="bi bi-envelope-fill text-primary me-2"></i> contact@qqeducation.com</p>
-
-                    <div class="d-flex gap-3">
-                        <a href="#" class="fs-4 text-primary"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="fs-4 text-danger"><i class="bi bi-youtube"></i></a>
-                        <a href="#" class="fs-4 text-info"><i class="bi bi-twitter"></i></a>
-                    </div>
+                    <p class="text-muted mb-2"><i class="bi bi-envelope-fill text-primary me-2"></i> contact@qqeducation.com</p>
                 </div>
             </div>
-
             <hr class="my-4">
-
             <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start text-muted">
-                    &copy; 2026 <strong>QQ Education</strong>. All Rights Reserved.
-                </div>
-                <div class="col-md-6 text-center text-md-end text-muted">
-                    Designed by Quan & Quoc
-                </div>
+                <div class="col-md-6 text-center text-md-start text-muted">&copy; 2026 <strong>QQ Education</strong>.</div>
+                <div class="col-md-6 text-center text-md-end text-muted">Designed by Quan & Quoc</div>
             </div>
         </div>
     </footer>

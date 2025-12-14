@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $title      = isset($_POST['title']) ? trim($_POST['title']) : '';
         $content    = isset($_POST['content']) ? trim($_POST['content']) : '';
         $type       = isset($_POST['type']) ? $_POST['type'] : 'text';
-        $status     = isset($_POST['status']) ? $_POST['status'] : 0;
+        $status     = 0; // Mặc định chưa được duyệt
         $user_id    = $_SESSION['user_id'];
 
         $video_filename = NULL;

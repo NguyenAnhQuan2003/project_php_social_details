@@ -11,60 +11,126 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = "";
 $error = "";
+$active_tab = 'user-settings';
 
-// --- 1. XỬ LÝ POST (CẬP NHẬT USERNAME & EMAIL) ---
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// --- 0.1 XỬ LÝ: CHẶN/BỎ CHẶN NGƯỜI DÙNG ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'toggle_status') {
+    $target_user_id = intval($_POST['user_id'] ?? 0);
 
-    $username_new = $_POST['username'];
-    $email_new    = $_POST['email'];
+    if ($target_user_id > 0) {
+        $sql_check = "SELECT status FROM users WHERE id = '$target_user_id'";
+        $result_check = mysqli_query($conn, $sql_check);
+        $target_user = mysqli_fetch_assoc($result_check);
+
+        if ($target_user) {
+            $new_status = ($target_user['status'] == 'active') ? 'block' : 'active';
+            $sql_update_status = "UPDATE users SET status = '$new_status' WHERE id = '$target_user_id'";
+
+            if (mysqli_query($conn, $sql_update_status)) {
+                $action_text = ($new_status == 'block') ? 'chặn' : 'bỏ chặn';
+                $_SESSION['toggle_message'] = "Đã $action_text người dùng thành công!";
+                header("Location: profile.php?tab=role-settings");
+                exit();
+            }
+        }
+    }
+}
+
+// --- 0.2 [CẬP NHẬT] XỬ LÝ: SỬA ROLE LEVEL ---
+// Sửa logic: Nhận role_level thay vì role_id
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'update_user_role') {
+    $target_user_id = intval($_POST['user_id'] ?? 0);
+    $new_role_level = intval($_POST['new_role_level'] ?? 0); // Đổi tên biến
+
+    // Kiểm tra cơ bản
+    if ($target_user_id > 0 && $new_role_level > 0 && $target_user_id != $user_id) {
+        // Cập nhật trường role_level
+        $sql_update_role = "UPDATE users SET role_level = '$new_role_level' WHERE id = '$target_user_id'";
+
+        if (mysqli_query($conn, $sql_update_role)) {
+            $_SESSION['toggle_message'] = "Đã cập nhật cấp độ quyền (Level) thành công!";
+            header("Location: profile.php?tab=role-settings");
+            exit();
+        } else {
+            $_SESSION['toggle_error'] = "Lỗi SQL: " . mysqli_error($conn);
+        }
+    }
+}
+
+// Kiểm tra parameter tab từ URL
+if (isset($_GET['tab'])) {
+    $active_tab = $_GET['tab'];
+}
+
+// Xử lý thông báo session
+if (isset($_SESSION['toggle_message'])) {
+    $message = $_SESSION['toggle_message'];
+    unset($_SESSION['toggle_message']);
+}
+if (isset($_SESSION['toggle_error'])) {
+    $error = $_SESSION['toggle_error'];
+    unset($_SESSION['toggle_error']);
+}
+
+// --- 1. XỬ LÝ POST (CẬP NHẬT PROFILE CÁ NHÂN) ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['action'])) {
+    $username_new = $_POST['username'] ?? '';
+    $email_new    = $_POST['email'] ?? '';
 
     if (empty($username_new) || empty($email_new)) {
         $error = "Vui lòng không để trống thông tin!";
     } else {
-        // Cập nhật thông tin cơ bản
-        $sql_update = "UPDATE users 
-                       SET username = '$username_new', email = '$email_new' 
-                       WHERE id = '$user_id'";
-
+        $sql_update = "UPDATE users SET username = '$username_new', email = '$email_new' WHERE id = '$user_id'";
         if (mysqli_query($conn, $sql_update)) {
             $message = "Cập nhật thành công!";
-
-            // Cập nhật lại tên trong Session để hiển thị ngay trên Navbar
             $_SESSION['username'] = $username_new;
+            $active_tab = 'user-settings';
         } else {
             $error = "Lỗi SQL: " . mysqli_error($conn);
         }
     }
 }
 
-// --- 2. LẤY DỮ LIỆU USER & CẬP NHẬT SESSION ROLE ---
-// Lấy thông tin mới nhất từ DB
+// --- 2. LẤY DỮ LIỆU USER HIỆN TẠI ---
 $sql_get = "SELECT * FROM users WHERE id = '$user_id'";
 $result = mysqli_query($conn, $sql_get);
 $user = mysqli_fetch_assoc($result);
 
 if ($user) {
-    // [QUAN TRỌNG] Lưu/Cập nhật Role vào Session tại đây
-    // Để đảm bảo quyền hạn luôn đúng với Database
     $_SESSION['role_id']    = $user['role_id'];
-    $_SESSION['role_level'] = $user['role_level'];
-    $_SESSION['email']      = $user['email']; // Lưu luôn email nếu cần dùng
+    $_SESSION['role_level'] = $user['role_level']; // Quan trọng
+    $_SESSION['email']      = $user['email'];
 }
 
-// --- 3. LẤY DANH SÁCH QUY­ỀN (ROLES) TỪ DATABASE ---
+// --- 3. LẤY DANH SÁCH ROLE ---
 $sql_roles = "SELECT id, role_name, role_level, description FROM roles ORDER BY role_level ASC";
 $result_roles = mysqli_query($conn, $sql_roles);
 $roles = mysqli_fetch_all($result_roles, MYSQLI_ASSOC);
 
-// Lấy tên role của user hiện tại
+// Lấy tên role hiện tại để hiển thị
 $current_role_name = "";
-if (!empty($roles)) {
-    foreach ($roles as $role) {
-        if ($role['id'] == $user['role_id']) {
-            $current_role_name = $role['role_name'];
-            break;
-        }
+foreach ($roles as $role) {
+    // So sánh theo role_level để tìm tên hiển thị cho chính xác
+    if ($role['role_level'] == $user['role_level']) {
+        $current_role_name = $role['role_name'];
+        break;
     }
+}
+
+// --- 4. LẤY DANH SÁCH USERS ---
+$users_list = [];
+// Logic hiển thị user dựa trên Role ID (Bạn có thể sửa thành Role Level nếu muốn: $user['role_level'] >= 10)
+if ($user['role_id'] == 4) {
+    // Lấy thêm trường role_level
+    $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE id != '$user_id' ORDER BY username ASC";
+} elseif ($user['role_id'] == 3) {
+    $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE role_id != 4 AND id != '$user_id' ORDER BY username ASC";
+} else {
+    $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE 1=0";
+}
+$result_users = mysqli_query($conn, $sql_users);
+if ($result_users) {
+    $users_list = mysqli_fetch_all($result_users, MYSQLI_ASSOC);
 }
 ?>
 
@@ -192,15 +258,15 @@ if (!empty($roles)) {
                     </div>
 
                     <div class="list-group list-group-flush" id="myTab" role="tablist">
-                        <a class="list-group-item list-group-item-action active" id="user-tab" data-bs-toggle="list" href="#user-settings" role="tab">
+                        <a class="list-group-item list-group-item-action <?php echo ($active_tab == 'user-settings') ? 'active' : ''; ?>" id="user-tab" data-bs-toggle="list" href="#user-settings" role="tab">
                             <i class="bi bi-person-gear me-3"></i>Cài đặt User
                         </a>
-                        <?php if ($user['role_id'] == 4): ?>
-                            <a class="list-group-item list-group-item-action" id="role-tab" data-bs-toggle="list" href="#role-settings" role="tab">
+                        <?php if ($user['role_id'] == 4 || $user['role_id'] == 3): ?>
+                            <a class="list-group-item list-group-item-action <?php echo ($active_tab == 'role-settings') ? 'active' : ''; ?>" id="role-tab" data-bs-toggle="list" href="#role-settings" role="tab">
                                 <i class="bi bi-shield-lock me-3"></i>Cài đặt Quyền (Role)
                             </a>
                         <?php endif; ?>
-                        <a class="list-group-item list-group-item-action" id="noti-tab" data-bs-toggle="list" href="#noti-settings" role="tab">
+                        <a class="list-group-item list-group-item-action <?php echo ($active_tab == 'noti-settings') ? 'active' : ''; ?>" id="noti-tab" data-bs-toggle="list" href="#noti-settings" role="tab">
                             <i class="bi bi-bell me-3"></i>Thông báo
                         </a>
                     </div>
@@ -211,7 +277,7 @@ if (!empty($roles)) {
                 <div class="settings-card p-4 h-100">
                     <div class="tab-content" id="myTabContent">
 
-                        <div class="tab-pane fade show active" id="user-settings" role="tabpanel">
+                        <div class="tab-pane fade <?php echo ($active_tab == 'user-settings') ? 'show active' : ''; ?>" id="user-settings" role="tabpanel">
                             <div class="content-header">
                                 <h3>Thông tin tài khoản</h3>
                                 <p class="text-muted small">Quản lý thông tin cá nhân và đăng nhập.</p>
@@ -262,21 +328,106 @@ if (!empty($roles)) {
                             </form>
                         </div>
 
-                        <?php if ($user['role_id'] == 4): ?>
-                            <div class="tab-pane fade" id="role-settings" role="tabpanel">
+                        <?php if ($user['role_id'] == 4 || $user['role_id'] == 3): ?>
+                            <div class="tab-pane fade <?php echo ($active_tab == 'role-settings') ? 'show active' : ''; ?>" id="role-settings" role="tabpanel">
+
+                                <div class="content-header mt-3">
+                                    <h3>Quản lý Người dùng</h3>
+                                    <p class="text-muted small">Danh sách các thành viên (Ẩn Admin/Mod cấp cao hơn).</p>
+                                </div>
+
+                                <?php if ($active_tab == 'role-settings' && !empty($message)): ?>
+                                    <div class="alert alert-success"><?php echo $message; ?></div>
+                                <?php endif; ?>
+
+                                <?php if ($active_tab == 'role-settings' && !empty($error)): ?>
+                                    <div class="alert alert-danger"><?php echo $error; ?></div>
+                                <?php endif; ?>
+
+                                <div class="table-responsive mb-5">
+                                    <table class="table table-hover align-middle border">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="5%">ID</th>
+                                                <th width="25%">Tên Người dùng</th>
+                                                <th width="30%">Email</th>
+                                                <th width="25%">Phân quyền (Level)</th>
+                                                <th width="15%" class="text-center">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (!empty($users_list)): ?>
+                                                <?php foreach ($users_list as $list_user): ?>
+                                                    <tr>
+                                                        <td><?php echo htmlspecialchars($list_user['id']); ?></td>
+                                                        <td>
+                                                            <strong><?php echo htmlspecialchars($list_user['username']); ?></strong>
+                                                            <?php if ($list_user['status'] == 'block'): ?>
+                                                                <span class="badge bg-danger ms-1">Blocked</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td><?php echo htmlspecialchars($list_user['email']); ?></td>
+
+                                                        <td>
+                                                            <form method="POST" class="d-flex gap-1" onsubmit="return confirm('Xác nhận thay đổi Cấp độ quyền (Level) cho <?php echo $list_user['username']; ?>?');">
+                                                                <input type="hidden" name="action" value="update_user_role">
+                                                                <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($list_user['id']); ?>">
+
+                                                                <select name="new_role_level" class="form-select form-select-sm" style="min-width: 120px;">
+                                                                    <?php foreach ($roles as $r): ?>
+                                                                        <option value="<?php echo $r['role_level']; ?>" <?php echo ($r['role_level'] == $list_user['role_level']) ? 'selected' : ''; ?>>
+                                                                            <?php echo htmlspecialchars($r['role_name']) . " (Lv " . $r['role_level'] . ")"; ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+
+                                                                <button type="submit" class="btn btn-sm btn-primary" title="Lưu Level mới">
+                                                                    <i class="bi bi-floppy-fill"></i>
+                                                                </button>
+                                                            </form>
+                                                        </td>
+
+                                                        <td class="text-center">
+                                                            <?php
+                                                            $is_blocked = ($list_user['status'] == 'block');
+                                                            $btn_color = $is_blocked ? 'success' : 'danger';
+                                                            $btn_text = $is_blocked ? 'Bỏ chặn' : 'Chặn';
+                                                            $btn_icon = $is_blocked ? 'check-circle' : 'ban';
+                                                            ?>
+                                                            <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn <?php echo $btn_text; ?> người này?');">
+                                                                <input type="hidden" name="action" value="toggle_status">
+                                                                <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($list_user['id']); ?>">
+                                                                <button type="submit" class="btn btn-sm btn-<?php echo $btn_color; ?> text-white" title="<?php echo $btn_text; ?>">
+                                                                    <i class="bi bi-<?php echo $btn_icon; ?>"></i>
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted py-4">Không có người dùng nào để quản lý.</td>
+                                                </tr>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+
                                 <div class="content-header d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h3>Cấu hình Phân quyền</h3>
-                                        <p class="text-muted small">Danh sách các nhóm quyền trong hệ thống.</p>
+                                        <h3>Danh sách Phân quyền</h3>
+                                        <p class="text-muted small">Các cấp độ quyền hạn trong hệ thống.</p>
                                     </div>
-                                    <button class="btn btn-success btn-sm fw-bold">
-                                        <i class="bi bi-plus-lg"></i> Thêm Quyền Mới
-                                    </button>
+                                    <?php if ($user['role_id'] == 4): ?>
+                                        <button class="btn btn-success btn-sm fw-bold">
+                                            <i class="bi bi-plus-lg"></i> Thêm Quyền
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
-                                        <thead>
+                                    <table class="table table-hover align-middle border">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th width="5%">ID</th>
                                                 <th width="20%">Tên Quyền</th>
@@ -294,8 +445,12 @@ if (!empty($roles)) {
                                                         <td><?php echo htmlspecialchars($role['role_level']); ?></td>
                                                         <td><?php echo htmlspecialchars($role['description']); ?></td>
                                                         <td class="text-center">
-                                                            <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
-                                                            <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                                            <?php if ($user['role_id'] == 4): ?>
+                                                                <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
+                                                                <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                                            <?php else: ?>
+                                                                <small class="text-muted">Xem</small>
+                                                            <?php endif; ?>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -307,11 +462,11 @@ if (!empty($roles)) {
                                         </tbody>
                                     </table>
                                 </div>
+
                             </div>
                         <?php endif; ?>
 
-
-                        <div class="tab-pane fade" id="noti-settings" role="tabpanel">
+                        <div class="tab-pane fade <?php echo ($active_tab == 'noti-settings') ? 'show active' : ''; ?>" id="noti-settings" role="tabpanel">
                             <div class="content-header">
                                 <h3>Cài đặt thông báo</h3>
                             </div>

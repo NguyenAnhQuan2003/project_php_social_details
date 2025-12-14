@@ -120,11 +120,11 @@ foreach ($roles as $role) {
 // --- 4. LẤY DANH SÁCH USERS ---
 $users_list = [];
 // Logic hiển thị user dựa trên Role ID (Bạn có thể sửa thành Role Level nếu muốn: $user['role_level'] >= 10)
-if ($user['role_id'] == 4) {
+if ($user['role_level'] == 4) {
     // Lấy thêm trường role_level
     $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE id != '$user_id' ORDER BY username ASC";
-} elseif ($user['role_id'] == 3) {
-    $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE role_id != 4 AND id != '$user_id' ORDER BY username ASC";
+} elseif ($user['role_level'] == 3) {
+    $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE role_level != 4 AND id != '$user_id' ORDER BY username ASC";
 } else {
     $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE 1=0";
 }
@@ -261,7 +261,7 @@ if ($result_users) {
                         <a class="list-group-item list-group-item-action <?php echo ($active_tab == 'user-settings') ? 'active' : ''; ?>" id="user-tab" data-bs-toggle="list" href="#user-settings" role="tab">
                             <i class="bi bi-person-gear me-3"></i>Cài đặt User
                         </a>
-                        <?php if ($user['role_id'] == 4 || $user['role_id'] == 3): ?>
+                        <?php if ($user['role_level'] == 4 || $user['role_level'] == 3): ?>
                             <a class="list-group-item list-group-item-action <?php echo ($active_tab == 'role-settings') ? 'active' : ''; ?>" id="role-tab" data-bs-toggle="list" href="#role-settings" role="tab">
                                 <i class="bi bi-shield-lock me-3"></i>Cài đặt Quyền (Role)
                             </a>
@@ -314,7 +314,7 @@ if ($result_users) {
                                     <div class="alert alert-info d-flex align-items-center" role="alert">
                                         <i class="bi bi-info-circle-fill me-2 fs-4"></i>
                                         <div>
-                                            Bạn đang giữ Role ID: <strong><?php echo $user['role_id']; ?> (<?php echo htmlspecialchars($current_role_name); ?>)</strong><br>
+                                            Bạn đang giữ Role ID: <strong><?php echo $user['role_level']; ?> (<?php echo htmlspecialchars($current_role_name); ?>)</strong><br>
                                             <small>Role Level: <?php echo $user['role_level']; ?></small>
                                         </div>
                                     </div>
@@ -328,7 +328,7 @@ if ($result_users) {
                             </form>
                         </div>
 
-                        <?php if ($user['role_id'] == 4 || $user['role_id'] == 3): ?>
+                        <?php if ($user['role_level'] == 4 || $user['role_level'] == 3): ?>
                             <div class="tab-pane fade <?php echo ($active_tab == 'role-settings') ? 'show active' : ''; ?>" id="role-settings" role="tabpanel">
 
                                 <div class="content-header mt-3">
@@ -418,7 +418,7 @@ if ($result_users) {
                                         <h3>Danh sách Phân quyền</h3>
                                         <p class="text-muted small">Các cấp độ quyền hạn trong hệ thống.</p>
                                     </div>
-                                    <?php if ($user['role_id'] == 4): ?>
+                                    <?php if ($user['role_level'] == 4): ?>
                                         <button class="btn btn-success btn-sm fw-bold">
                                             <i class="bi bi-plus-lg"></i> Thêm Quyền
                                         </button>
@@ -445,7 +445,7 @@ if ($result_users) {
                                                         <td><?php echo htmlspecialchars($role['role_level']); ?></td>
                                                         <td><?php echo htmlspecialchars($role['description']); ?></td>
                                                         <td class="text-center">
-                                                            <?php if ($user['role_id'] == 4): ?>
+                                                            <?php if ($user['role_level'] == 4): ?>
                                                                 <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
                                                                 <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
                                                             <?php else: ?>

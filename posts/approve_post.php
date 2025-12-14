@@ -15,7 +15,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $post_id = intval($_GET['id']);
 $user_role = $_SESSION['role_level'] ?? 1;
 
-// Chỉ Owner và Moderator có quyền duyệt
 if ($user_role < 3) {
     header("Location: ../index.php");
     exit();
@@ -31,7 +30,7 @@ if (mysqli_num_rows($query) == 0) {
 
 $post = mysqli_fetch_assoc($query);
 
-// Cập nhật status thành 1 (đã duyệt)
+
 $update_sql = "UPDATE posts SET status = 1 WHERE id = $post_id";
 
 if (mysqli_query($conn, $update_sql)) {
@@ -41,4 +40,3 @@ if (mysqli_query($conn, $update_sql)) {
     header("Location: ../index.php?error=Lỗi: Không thể duyệt bài đăng!");
     exit();
 }
-?>

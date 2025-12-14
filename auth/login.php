@@ -1,6 +1,6 @@
 <?php
 session_start();
-// Đảm bảo đường dẫn file config đúng (dùng __DIR__ cho chắc chắn)
+
 require_once '../config.php';
 
 $error = '';
@@ -12,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username_input) || empty($password_input)) {
         $error = 'Tài khoản và mật khẩu không được để trống.';
     } else {
-        // Xử lý ký tự đặc biệt để tránh lỗi SQL cơ bản
         $safe_username = mysqli_real_escape_string($conn, $username_input);
 
         $sql = "SELECT * FROM users WHERE username = '$safe_username' OR email = '$safe_username'";
@@ -21,18 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($query && mysqli_num_rows($query) > 0) {
             $user = mysqli_fetch_assoc($query);
 
-            // --- [MỚI] KIỂM TRA TRẠNG THÁI STATUS ---
             if ($user['status'] == 'block') {
                 $error = 'Tài khoản của bạn đã bị khóa do vi phạm quy tắc cộng đồng.';
-            }
-            // Nếu không bị block thì mới kiểm tra mật khẩu
-            else if ($password_input === $user['password']) {
-
-                // Lưu đầy đủ thông tin vào Session để dùng cho các trang khác
+            } else if ($password_input === $user['password']) {
                 $_SESSION['user_id']    = $user['id'];
                 $_SESSION['username']   = $user['username'];
-                $_SESSION['role_id']    = $user['role_id'];    // Lưu ID quyền
-                $_SESSION['role_level'] = $user['role_level']; // Lưu Level quyền
+                $_SESSION['role_id']    = $user['role_id'];
+                $_SESSION['role_level'] = $user['role_level'];
                 $_SESSION['email']      = $user['email'];
 
                 header('Location: ../index.php');

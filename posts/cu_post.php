@@ -2,7 +2,6 @@
 session_start();
 require '../config.php';
 
-// 1. Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
@@ -11,39 +10,29 @@ if (!isset($_SESSION['user_id'])) {
 $message = "";
 $error = "";
 
-// 2. XỬ LÝ KHI SUBMIT FORM
-// 2. XỬ LÝ KHI SUBMIT FORM
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // --- KIỂM TRA LỖI POST_MAX_SIZE ---
-    // Nếu $_POST rỗng nhưng trình duyệt có gửi dữ liệu (CONTENT_LENGTH > 0)
-    // Chứng tỏ file quá lớn đã làm sập dữ liệu POST
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0) {
         $error = "Lỗi: File video quá lớn so với cấu hình server (post_max_size). Vui lòng kiểm tra php.ini";
     } else {
-        // --- NẾU KHÔNG BỊ LỖI TRÊN THÌ MỚI LẤY DỮ LIỆU ---
         $title      = isset($_POST['title']) ? trim($_POST['title']) : '';
         $content    = isset($_POST['content']) ? trim($_POST['content']) : '';
         $type       = isset($_POST['type']) ? $_POST['type'] : 'text';
-        $status     = 0; // Mặc định chưa được duyệt
+        $status     = 0;
         $user_id    = $_SESSION['user_id'];
 
         $video_filename = NULL;
 
-        // Validate cơ bản
+
         if (empty($title) || empty($content)) {
             $error = "Vui lòng nhập tiêu đề và nội dung!";
         } else {
-            // ... (Phần code xử lý logic bên trong giữ nguyên như cũ) ...
 
-            // TRƯỜNG HỢP 1: NẾU LÀ BÀI VIẾT VĂN BẢN (TEXT)
             if ($type == 'text') {
                 $video_filename = NULL;
-            }
-            // TRƯỜNG HỢP 2: NẾU LÀ VIDEO
-            elseif ($type == 'video') {
+            } elseif ($type == 'video') {
                 if (isset($_FILES['video_file']) && $_FILES['video_file']['error'] == 0) {
-                    // ... (Code upload giữ nguyên) ...
+
                     $allowed = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
                     $filename = $_FILES['video_file']['name'];
                     $file_tmp = $_FILES['video_file']['tmp_name'];
@@ -67,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
                     }
                 } else {
-                    // Nếu lỗi là do file quá lớn (upload_max_filesize)
+
                     if (isset($_FILES['video_file']) && $_FILES['video_file']['error'] == 1) {
                         $error = "Lỗi: File vượt quá giới hạn upload_max_filesize trong php.ini";
                     } else {
@@ -76,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            // --- LƯU VÀO DATABASE ---
+
             if (empty($error)) {
                 $sql = "INSERT INTO posts (user_id, title, content, type, video_url, status, created_at, updated_at) 
                         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";

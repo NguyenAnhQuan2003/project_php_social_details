@@ -2,7 +2,7 @@
 session_start();
 require '../config.php';
 
-// Kiểm tra đăng nhập
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
@@ -13,9 +13,7 @@ $message = "";
 $error = "";
 $active_tab = 'user-settings';
 
-// --- PHẦN 1: XỬ LÝ LOGIC USER (GIỮ NGUYÊN) ---
 
-// 0.1 XỬ LÝ: CHẶN/BỎ CHẶN NGƯỜI DÙNG
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'toggle_status') {
     $target_user_id = intval($_POST['user_id'] ?? 0);
     if ($target_user_id > 0) {
@@ -35,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 
-// 0.2 XỬ LÝ: CẬP NHẬT ROLE LEVEL NGƯỜI DÙNG
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'update_user_role') {
     $target_user_id = intval($_POST['user_id'] ?? 0);
     $new_role_level = intval($_POST['new_role_level'] ?? 0);
@@ -51,9 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 
-// --- PHẦN 2: XỬ LÝ LOGIC ROLE (THÊM MỚI) ---
 
-// 2.1 THÊM QUYỀN MỚI
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'add_role') {
     $r_name = mysqli_real_escape_string($conn, $_POST['role_name']);
     $r_level = intval($_POST['role_level']);
@@ -71,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 
-// 2.2 SỬA QUYỀN
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'edit_role') {
     $r_id = intval($_POST['role_id']);
     $r_name = mysqli_real_escape_string($conn, $_POST['role_name']);
@@ -90,12 +86,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 
-// 2.3 XÓA QUYỀN
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'delete_role') {
     $r_id = intval($_POST['role_id']);
-    // Không cho phép xóa Role level 4 (Admin cao nhất) hoặc Role của chính mình
+
     if ($r_id > 0) {
-        // Kiểm tra xem có phải role admin không (giả sử level 4 là max)
+
         $check_sql = "SELECT role_level FROM roles WHERE id = '$r_id'";
         $check_res = mysqli_query($conn, $check_sql);
         $check_row = mysqli_fetch_assoc($check_res);
@@ -115,14 +110,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 
-// --- CÁC LOGIC KHÁC GIỮ NGUYÊN ---
 
-// Kiểm tra parameter tab từ URL
+
+
 if (isset($_GET['tab'])) {
     $active_tab = $_GET['tab'];
 }
 
-// Xử lý thông báo session
+
 if (isset($_SESSION['toggle_message'])) {
     $message = $_SESSION['toggle_message'];
     unset($_SESSION['toggle_message']);
@@ -132,7 +127,7 @@ if (isset($_SESSION['toggle_error'])) {
     unset($_SESSION['toggle_error']);
 }
 
-// XỬ LÝ POST (CẬP NHẬT PROFILE CÁ NHÂN)
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['action'])) {
     $username_new = $_POST['username'] ?? '';
     $email_new    = $_POST['email'] ?? '';
@@ -151,7 +146,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['action'])) {
     }
 }
 
-// LẤY DỮ LIỆU USER HIỆN TẠI
 $sql_get = "SELECT * FROM users WHERE id = '$user_id'";
 $result = mysqli_query($conn, $sql_get);
 $user = mysqli_fetch_assoc($result);
@@ -162,12 +156,12 @@ if ($user) {
     $_SESSION['email']      = $user['email'];
 }
 
-// LẤY DANH SÁCH ROLE
+
 $sql_roles = "SELECT id, role_name, role_level, description FROM roles ORDER BY role_level ASC";
 $result_roles = mysqli_query($conn, $sql_roles);
 $roles = mysqli_fetch_all($result_roles, MYSQLI_ASSOC);
 
-// Lấy tên role hiện tại
+
 $current_role_name = "";
 foreach ($roles as $role) {
     if ($role['role_level'] == $user['role_level']) {
@@ -176,7 +170,7 @@ foreach ($roles as $role) {
     }
 }
 
-// LẤY DANH SÁCH USERS
+
 $users_list = [];
 if ($user['role_level'] == 4) {
     $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE id != '$user_id' ORDER BY username ASC";

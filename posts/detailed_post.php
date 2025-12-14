@@ -312,13 +312,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             </div>
             <?php
-            // Hiển thị status badge
             $user_role = $_SESSION['role_level'] ?? 1;
             $show_status = false;
 
-            if ($user_role >= 3) { // Owner và Moderator: luôn hiển thị
+            if ($user_role >= 3) {
                 $show_status = true;
-            } elseif ($user_role == 2 && $post['status'] != 1) { // Contributor: hiển thị nếu chưa duyệt hoặc bị từ chối
+            } elseif ($user_role == 2 && $post['status'] != 1) {
                 if ($post['user_id'] == $_SESSION['user_id']) {
                     $show_status = true;
                 }
@@ -343,20 +342,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php echo nl2br(htmlspecialchars($post['content'])); ?>
             </div>
             <?php
-            // Kiểm tra quyền sửa xóa bài đăng
-            // Owner: sửa + xoá
-            // Moderator: xoá
-            // Contributor: sửa + xoá bài của mình
+
             $can_edit_post = false;
             $can_delete_post = false;
             if (isset($_SESSION['user_id'])) {
                 $user_role = $_SESSION['role_level'] ?? 1;
-                if ($user_role == 4) { // Owner
+                if ($user_role == 4) {
                     $can_edit_post = true;
                     $can_delete_post = true;
-                } elseif ($user_role == 3) { // Moderator
+                } elseif ($user_role == 3) {
                     $can_delete_post = true;
-                } elseif ($user_role == 2 && $post['user_id'] == $_SESSION['user_id']) { // Contributor sửa bài của mình
+                } elseif ($user_role == 2 && $post['user_id'] == $_SESSION['user_id']) {
                     $can_edit_post = true;
                     $can_delete_post = true;
                 }
@@ -375,7 +371,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </a>
                     <?php endif; ?>
                     <?php
-                    // Nút duyệt/từ chối cho Owner và Moderator
+
                     if ($user_role >= 3) {
                         if ($post['status'] != 1) {
                             echo '<a href="approve_post.php?id=' . $post_id . '" class="btn-approve">
@@ -422,20 +418,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                          WHERE comments.post_id = $post_id
                                                          ORDER BY comments.created_at ASC");
                     while ($comment = mysqli_fetch_assoc($comment_query)):
-                        // Kiểm tra quyền sửa xóa bình luận
-                        // Owner: sửa + xoá
-                        // Moderator: xoá
-                        // Chủ sở hữu: sửa + xoá của mình
+
                         $can_edit_comment = false;
                         $can_delete_comment = false;
                         if (isset($_SESSION['user_id'])) {
                             $user_role = $_SESSION['role_level'] ?? 1;
-                            if ($user_role == 4) { // Owner
+                            if ($user_role == 4) {
                                 $can_edit_comment = true;
                                 $can_delete_comment = true;
-                            } elseif ($user_role == 3) { // Moderator
+                            } elseif ($user_role == 3) {
                                 $can_delete_comment = true;
-                            } elseif ($comment['user_id'] == $_SESSION['user_id']) { // Chủ sở hữu bình luận
+                            } elseif ($comment['user_id'] == $_SESSION['user_id']) {
                                 $can_edit_comment = true;
                                 $can_delete_comment = true;
                             }

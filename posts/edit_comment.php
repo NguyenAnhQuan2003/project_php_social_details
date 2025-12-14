@@ -2,13 +2,13 @@
 session_start();
 include '../config.php';
 
-// Kiểm tra người dùng đã đăng nhập chưa
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-// Kiểm tra xem có comment_id hay không
+
 if (!isset($_GET['comment_id']) || !is_numeric($_GET['comment_id'])) {
     header("Location: ../index.php");
     exit();
@@ -24,7 +24,7 @@ $post_id = intval($_GET['post_id']);
 $user_id = $_SESSION['user_id'];
 $role_level = $_SESSION['role_level'] ?? 1;
 
-// Lấy thông tin bình luận
+
 $sql = "SELECT * FROM comments WHERE id = $comment_id";
 $query = mysqli_query($conn, $sql);
 
@@ -35,13 +35,11 @@ if (mysqli_num_rows($query) == 0) {
 
 $comment = mysqli_fetch_assoc($query);
 
-// Kiểm tra quyền sửa bình luận
-// Owner (level 4) có thể sửa tất cả bình luận
-// Chủ sở hữu bình luận cũng có thể sửa bình luận của mình
+
 $can_edit = false;
 if ($role_level == 4) { // Owner
     $can_edit = true;
-} elseif ($comment['user_id'] == $user_id) { // Chủ sở hữu bình luận
+} elseif ($comment['user_id'] == $user_id) {
     $can_edit = true;
 }
 
@@ -55,17 +53,17 @@ $success = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $content = isset($_POST['content']) ? trim($_POST['content']) : '';
-    
+
     if (empty($content)) {
         $error = "Vui lòng điền nội dung bình luận!";
     } else {
         $content = mysqli_real_escape_string($conn, $content);
-        
+
         $update_sql = "UPDATE comments SET content = '$content', updated_at = NOW() WHERE id = $comment_id";
-        
+
         if (mysqli_query($conn, $update_sql)) {
             $success = "Cập nhật bình luận thành công!";
-            // Redirect sau 1 giây
+
             header("Refresh: 1; url=detailed_post.php?id=$post_id");
         } else {
             $error = "Lỗi: " . mysqli_error($conn);
@@ -76,6 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -89,44 +88,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 0;
             padding-top: 70px;
         }
+
         .navbar {
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
+
         .logo-img {
             height: 45px;
             width: auto;
         }
+
         .edit-container {
             max-width: 700px;
             margin: 2rem auto;
         }
+
         .edit-card {
             background: white;
             border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             padding: 2rem;
         }
+
         .form-label {
             font-weight: 600;
             color: #333;
         }
+
         .form-control:focus {
             border-color: #6a11cb;
             box-shadow: 0 0 0 0.2rem rgba(106, 17, 203, 0.25);
         }
+
         .btn-submit {
             background: linear-gradient(to right, #6a11cb, #2575fc);
             border: none;
             color: white;
             padding: 12px 30px;
         }
+
         .btn-submit:hover {
             background: linear-gradient(to right, #5a0fbb, #1565ec);
             color: white;
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container-fluid">
@@ -197,4 +205,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

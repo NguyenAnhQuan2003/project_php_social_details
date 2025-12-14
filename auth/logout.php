@@ -106,7 +106,6 @@ session_destroy();
     </div>
 
     <script>
-        // Logic đếm ngược và chuyển hướng
         let seconds = 3;
         const countdownEl = document.getElementById('countdown');
 
@@ -116,7 +115,6 @@ session_destroy();
 
             if (seconds <= 0) {
                 clearInterval(timer);
-                // Chuyển hướng về trang chủ (hoặc login.php tùy bạn)
                 window.location.href = '../index.php';
             }
         }, 1000);

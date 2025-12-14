@@ -7,8 +7,7 @@ if (isset($_SESSION['user_id'])) {
     $link_action = "./auth/register.php";
 }
 
-// [PHÂN TRANG 1] Cấu hình số lượng bài trên mỗi trang
-$limit = 6; // Số bài hiển thị mỗi trang (bạn có thể sửa số này)
+$limit = 6;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
@@ -205,12 +204,9 @@ $offset = ($page - 1) * $limit;
             $search_query = $_GET['search'] ?? '';
             $user_role = $_SESSION['role_level'] ?? 1;
 
-            // Xây dựng điều kiện WHERE (Dùng chung cho cả đếm tổng và lấy dữ liệu)
             $where_conditions = [];
 
-            // 1. Điều kiện Quyền
             if ($user_role >= 3) {
-                // Owner/Moderator thấy hết
             } elseif ($user_role == 2) {
                 $user_id = $_SESSION['user_id'];
                 $where_conditions[] = "(posts.status = 1 OR (posts.user_id = $user_id AND posts.status IN (0, -1)))";
@@ -218,19 +214,16 @@ $offset = ($page - 1) * $limit;
                 $where_conditions[] = "posts.status = 1";
             }
 
-            // 2. Điều kiện Loại
             if ($type_filter == 'text' || $type_filter == 'video') {
                 $safe_type = mysqli_real_escape_string($conn, $type_filter);
                 $where_conditions[] = "posts.type = '$safe_type'";
             }
 
-            // 3. Điều kiện Tìm kiếm
             if (!empty($search_query)) {
                 $safe_search = mysqli_real_escape_string($conn, $search_query);
                 $where_conditions[] = "(posts.title LIKE '%$safe_search%' OR posts.content LIKE '%$safe_search%')";
             }
 
-            // --- [PHÂN TRANG 2] TÍNH TỔNG SỐ TRANG ---
             $sql_count = "SELECT COUNT(*) as total FROM posts JOIN users ON posts.user_id = users.id";
             if (!empty($where_conditions)) {
                 $sql_count .= " WHERE " . implode(" AND ", $where_conditions);
@@ -239,9 +232,9 @@ $offset = ($page - 1) * $limit;
             $row_count = mysqli_fetch_assoc($query_count);
             $total_records = $row_count['total'];
             $total_pages = ceil($total_records / $limit);
-            // -------------------------------------------
 
-            // --- LẤY DỮ LIỆU CÓ LIMIT ---
+
+
             $sql = "SELECT posts.*, users.username FROM posts JOIN users ON posts.user_id = users.id";
             if (!empty($where_conditions)) {
                 $sql .= " WHERE " . implode(" AND ", $where_conditions);

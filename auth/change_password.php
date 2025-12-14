@@ -1,14 +1,12 @@
 <?php
-// 1. BẬT BÁO LỖI (Để fix lỗi trang trắng)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-// Sửa đường dẫn này nếu file config nằm ở chỗ khác
+
 require '../config.php';
 
-// Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
     header("Location: ./login.php");
     exit();
@@ -28,8 +26,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif ($new_password != $confirm_password) {
         $error = "Mật khẩu mới nhập lại không khớp!";
     } else {
-        // --- BƯỚC 1: LẤY MẬT KHẨU CŨ (VIẾT THẲNG SQL) ---
-        // Vì user_id là số nên không cần dấu nháy đơn
         $sql = "SELECT password FROM users WHERE id = $user_id";
 
         $result = $conn->query($sql);
@@ -37,11 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
 
-            // So sánh mật khẩu (Không mã hóa)
             if ($row['password'] == $current_password) {
-
-                // --- BƯỚC 2: CẬP NHẬT MẬT KHẨU MỚI (VIẾT THẲNG SQL) ---
-                // Lưu ý: Mật khẩu là chuỗi (string) nên PHẢI CÓ DẤU NHÁY ĐƠN '$new_password' bao quanh
                 $update_sql = "UPDATE users SET password = '$new_password' WHERE id = $user_id";
 
                 if ($conn->query($update_sql) === TRUE) {

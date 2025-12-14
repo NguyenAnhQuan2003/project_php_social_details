@@ -153,7 +153,12 @@ if ($user) {
 <body>
     <div class="navbar-dummy">
         <div class="container d-flex justify-content-between align-items-center">
-            <span class="fw-bold fs-4 text-primary">QQ Social</span>
+            <a href="../index.php" class="d-flex align-items-center mb-3 text-decoration-none">
+                <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(106, 17, 203, 0.3);">
+                    <span style="color: white; font-weight: 900; font-family: sans-serif; font-size: 20px; letter-spacing: -1px;">QQ</span>
+                </div>
+                <span class="fs-4 fw-bold text-primary ms-2">Education</span>
+            </a>
             <a href="../index.php" class="btn btn-outline-secondary btn-sm rounded-pill px-3 text-decoration-none">
                 <i class="bi bi-arrow-left"></i> Về trang chủ
             </a>

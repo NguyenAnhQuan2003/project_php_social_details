@@ -13,19 +13,18 @@ $message = "";
 $error = "";
 $active_tab = 'user-settings';
 
-// --- 0.1 XỬ LÝ: CHẶN/BỎ CHẶN NGƯỜI DÙNG ---
+// --- PHẦN 1: XỬ LÝ LOGIC USER (GIỮ NGUYÊN) ---
+
+// 0.1 XỬ LÝ: CHẶN/BỎ CHẶN NGƯỜI DÙNG
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'toggle_status') {
     $target_user_id = intval($_POST['user_id'] ?? 0);
-
     if ($target_user_id > 0) {
         $sql_check = "SELECT status FROM users WHERE id = '$target_user_id'";
         $result_check = mysqli_query($conn, $sql_check);
         $target_user = mysqli_fetch_assoc($result_check);
-
         if ($target_user) {
             $new_status = ($target_user['status'] == 'active') ? 'block' : 'active';
             $sql_update_status = "UPDATE users SET status = '$new_status' WHERE id = '$target_user_id'";
-
             if (mysqli_query($conn, $sql_update_status)) {
                 $action_text = ($new_status == 'block') ? 'chặn' : 'bỏ chặn';
                 $_SESSION['toggle_message'] = "Đã $action_text người dùng thành công!";
@@ -36,17 +35,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 
-// --- 0.2 [CẬP NHẬT] XỬ LÝ: SỬA ROLE LEVEL ---
-// Sửa logic: Nhận role_level thay vì role_id
+// 0.2 XỬ LÝ: CẬP NHẬT ROLE LEVEL NGƯỜI DÙNG
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'update_user_role') {
     $target_user_id = intval($_POST['user_id'] ?? 0);
-    $new_role_level = intval($_POST['new_role_level'] ?? 0); // Đổi tên biến
-
-    // Kiểm tra cơ bản
+    $new_role_level = intval($_POST['new_role_level'] ?? 0);
     if ($target_user_id > 0 && $new_role_level > 0 && $target_user_id != $user_id) {
-        // Cập nhật trường role_level
         $sql_update_role = "UPDATE users SET role_level = '$new_role_level' WHERE id = '$target_user_id'";
-
         if (mysqli_query($conn, $sql_update_role)) {
             $_SESSION['toggle_message'] = "Đã cập nhật cấp độ quyền (Level) thành công!";
             header("Location: profile.php?tab=role-settings");
@@ -56,6 +50,72 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         }
     }
 }
+
+// --- PHẦN 2: XỬ LÝ LOGIC ROLE (THÊM MỚI) ---
+
+// 2.1 THÊM QUYỀN MỚI
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'add_role') {
+    $r_name = mysqli_real_escape_string($conn, $_POST['role_name']);
+    $r_level = intval($_POST['role_level']);
+    $r_desc = mysqli_real_escape_string($conn, $_POST['description']);
+
+    if (!empty($r_name) && $r_level > 0) {
+        $sql_add = "INSERT INTO roles (role_name, role_level, description) VALUES ('$r_name', '$r_level', '$r_desc')";
+        if (mysqli_query($conn, $sql_add)) {
+            $_SESSION['toggle_message'] = "Thêm quyền mới thành công!";
+            header("Location: profile.php?tab=role-settings");
+            exit();
+        } else {
+            $_SESSION['toggle_error'] = "Lỗi: " . mysqli_error($conn);
+        }
+    }
+}
+
+// 2.2 SỬA QUYỀN
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'edit_role') {
+    $r_id = intval($_POST['role_id']);
+    $r_name = mysqli_real_escape_string($conn, $_POST['role_name']);
+    $r_level = intval($_POST['role_level']);
+    $r_desc = mysqli_real_escape_string($conn, $_POST['description']);
+
+    if ($r_id > 0 && !empty($r_name) && $r_level > 0) {
+        $sql_edit = "UPDATE roles SET role_name='$r_name', role_level='$r_level', description='$r_desc' WHERE id='$r_id'";
+        if (mysqli_query($conn, $sql_edit)) {
+            $_SESSION['toggle_message'] = "Cập nhật quyền thành công!";
+            header("Location: profile.php?tab=role-settings");
+            exit();
+        } else {
+            $_SESSION['toggle_error'] = "Lỗi: " . mysqli_error($conn);
+        }
+    }
+}
+
+// 2.3 XÓA QUYỀN
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'delete_role') {
+    $r_id = intval($_POST['role_id']);
+    // Không cho phép xóa Role level 4 (Admin cao nhất) hoặc Role của chính mình
+    if ($r_id > 0) {
+        // Kiểm tra xem có phải role admin không (giả sử level 4 là max)
+        $check_sql = "SELECT role_level FROM roles WHERE id = '$r_id'";
+        $check_res = mysqli_query($conn, $check_sql);
+        $check_row = mysqli_fetch_assoc($check_res);
+
+        if ($check_row['role_level'] == 4) {
+            $_SESSION['toggle_error'] = "Không thể xóa quyền Quản trị viên cao cấp!";
+        } else {
+            $sql_del = "DELETE FROM roles WHERE id='$r_id'";
+            if (mysqli_query($conn, $sql_del)) {
+                $_SESSION['toggle_message'] = "Đã xóa quyền thành công!";
+                header("Location: profile.php?tab=role-settings");
+                exit();
+            } else {
+                $_SESSION['toggle_error'] = "Lỗi: " . mysqli_error($conn);
+            }
+        }
+    }
+}
+
+// --- CÁC LOGIC KHÁC GIỮ NGUYÊN ---
 
 // Kiểm tra parameter tab từ URL
 if (isset($_GET['tab'])) {
@@ -72,7 +132,7 @@ if (isset($_SESSION['toggle_error'])) {
     unset($_SESSION['toggle_error']);
 }
 
-// --- 1. XỬ LÝ POST (CẬP NHẬT PROFILE CÁ NHÂN) ---
+// XỬ LÝ POST (CẬP NHẬT PROFILE CÁ NHÂN)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['action'])) {
     $username_new = $_POST['username'] ?? '';
     $email_new    = $_POST['email'] ?? '';
@@ -91,37 +151,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['action'])) {
     }
 }
 
-// --- 2. LẤY DỮ LIỆU USER HIỆN TẠI ---
+// LẤY DỮ LIỆU USER HIỆN TẠI
 $sql_get = "SELECT * FROM users WHERE id = '$user_id'";
 $result = mysqli_query($conn, $sql_get);
 $user = mysqli_fetch_assoc($result);
 
 if ($user) {
     $_SESSION['role_id']    = $user['role_id'];
-    $_SESSION['role_level'] = $user['role_level']; // Quan trọng
+    $_SESSION['role_level'] = $user['role_level'];
     $_SESSION['email']      = $user['email'];
 }
 
-// --- 3. LẤY DANH SÁCH ROLE ---
+// LẤY DANH SÁCH ROLE
 $sql_roles = "SELECT id, role_name, role_level, description FROM roles ORDER BY role_level ASC";
 $result_roles = mysqli_query($conn, $sql_roles);
 $roles = mysqli_fetch_all($result_roles, MYSQLI_ASSOC);
 
-// Lấy tên role hiện tại để hiển thị
+// Lấy tên role hiện tại
 $current_role_name = "";
 foreach ($roles as $role) {
-    // So sánh theo role_level để tìm tên hiển thị cho chính xác
     if ($role['role_level'] == $user['role_level']) {
         $current_role_name = $role['role_name'];
         break;
     }
 }
 
-// --- 4. LẤY DANH SÁCH USERS ---
+// LẤY DANH SÁCH USERS
 $users_list = [];
-// Logic hiển thị user dựa trên Role ID (Bạn có thể sửa thành Role Level nếu muốn: $user['role_level'] >= 10)
 if ($user['role_level'] == 4) {
-    // Lấy thêm trường role_level
     $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE id != '$user_id' ORDER BY username ASC";
 } elseif ($user['role_level'] == 3) {
     $sql_users = "SELECT id, username, email, role_id, role_level, status FROM users WHERE role_level != 4 AND id != '$user_id' ORDER BY username ASC";
@@ -333,7 +390,7 @@ if ($result_users) {
 
                                 <div class="content-header mt-3">
                                     <h3>Quản lý Người dùng</h3>
-                                    <p class="text-muted small">Danh sách các thành viên (Ẩn Admin/Mod cấp cao hơn).</p>
+                                    <p class="text-muted small">Danh sách các thành viên.</p>
                                 </div>
 
                                 <?php if ($active_tab == 'role-settings' && !empty($message)): ?>
@@ -367,26 +424,20 @@ if ($result_users) {
                                                             <?php endif; ?>
                                                         </td>
                                                         <td><?php echo htmlspecialchars($list_user['email']); ?></td>
-
                                                         <td>
-                                                            <form method="POST" class="d-flex gap-1" onsubmit="return confirm('Xác nhận thay đổi Cấp độ quyền (Level) cho <?php echo $list_user['username']; ?>?');">
+                                                            <form method="POST" class="d-flex gap-1" onsubmit="return confirm('Xác nhận đổi quyền?');">
                                                                 <input type="hidden" name="action" value="update_user_role">
                                                                 <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($list_user['id']); ?>">
-
                                                                 <select name="new_role_level" class="form-select form-select-sm" style="min-width: 120px;">
                                                                     <?php foreach ($roles as $r): ?>
                                                                         <option value="<?php echo $r['role_level']; ?>" <?php echo ($r['role_level'] == $list_user['role_level']) ? 'selected' : ''; ?>>
-                                                                            <?php echo htmlspecialchars($r['role_name']) . " (Lv " . $r['role_level'] . ")"; ?>
+                                                                            <?php echo htmlspecialchars($r['role_name']); ?>
                                                                         </option>
                                                                     <?php endforeach; ?>
                                                                 </select>
-
-                                                                <button type="submit" class="btn btn-sm btn-primary" title="Lưu Level mới">
-                                                                    <i class="bi bi-floppy-fill"></i>
-                                                                </button>
+                                                                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-floppy-fill"></i></button>
                                                             </form>
                                                         </td>
-
                                                         <td class="text-center">
                                                             <?php
                                                             $is_blocked = ($list_user['status'] == 'block');
@@ -406,7 +457,7 @@ if ($result_users) {
                                                 <?php endforeach; ?>
                                             <?php else: ?>
                                                 <tr>
-                                                    <td colspan="5" class="text-center text-muted py-4">Không có người dùng nào để quản lý.</td>
+                                                    <td colspan="5" class="text-center text-muted">Không có dữ liệu.</td>
                                                 </tr>
                                             <?php endif; ?>
                                         </tbody>
@@ -416,10 +467,10 @@ if ($result_users) {
                                 <div class="content-header d-flex justify-content-between align-items-center">
                                     <div>
                                         <h3>Danh sách Phân quyền</h3>
-                                        <p class="text-muted small">Các cấp độ quyền hạn trong hệ thống.</p>
+                                        <p class="text-muted small">Cấp độ quyền hạn (Chỉ Admin cao nhất được sửa).</p>
                                     </div>
                                     <?php if ($user['role_level'] == 4): ?>
-                                        <button class="btn btn-success btn-sm fw-bold">
+                                        <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addRoleModal">
                                             <i class="bi bi-plus-lg"></i> Thêm Quyền
                                         </button>
                                     <?php endif; ?>
@@ -446,8 +497,21 @@ if ($result_users) {
                                                         <td><?php echo htmlspecialchars($role['description']); ?></td>
                                                         <td class="text-center">
                                                             <?php if ($user['role_level'] == 4): ?>
-                                                                <button class="btn btn-sm btn-light text-primary"><i class="bi bi-pencil-square"></i></button>
-                                                                <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                                                <button class="btn btn-sm btn-light text-primary edit-role-btn"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#editRoleModal"
+                                                                    data-id="<?php echo $role['id']; ?>"
+                                                                    data-name="<?php echo htmlspecialchars($role['role_name']); ?>"
+                                                                    data-level="<?php echo $role['role_level']; ?>"
+                                                                    data-desc="<?php echo htmlspecialchars($role['description']); ?>">
+                                                                    <i class="bi bi-pencil-square"></i>
+                                                                </button>
+
+                                                                <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa quyền này không? Hành động không thể hoàn tác!');">
+                                                                    <input type="hidden" name="action" value="delete_role">
+                                                                    <input type="hidden" name="role_id" value="<?php echo $role['id']; ?>">
+                                                                    <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+                                                                </form>
                                                             <?php else: ?>
                                                                 <small class="text-muted">Xem</small>
                                                             <?php endif; ?>
@@ -456,13 +520,12 @@ if ($result_users) {
                                                 <?php endforeach; ?>
                                             <?php else: ?>
                                                 <tr>
-                                                    <td colspan="5" class="text-center text-muted py-4">Không có quyền nào trong hệ thống.</td>
+                                                    <td colspan="5" class="text-center text-muted">Không có quyền nào.</td>
                                                 </tr>
                                             <?php endif; ?>
                                         </tbody>
                                     </table>
                                 </div>
-
                             </div>
                         <?php endif; ?>
 
@@ -481,7 +544,93 @@ if ($result_users) {
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="addRoleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Thêm Quyền Mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="add_role">
+                        <div class="mb-3">
+                            <label class="form-label">Tên Quyền (Ví dụ: Admin)</label>
+                            <input type="text" class="form-control" name="role_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Level (Số càng cao quyền càng lớn)</label>
+                            <input type="number" class="form-control" name="role_level" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-success">Thêm Mới</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editRoleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Sửa Thông Tin Quyền</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="edit_role">
+                        <input type="hidden" name="role_id" id="edit_role_id">
+
+                        <div class="mb-3">
+                            <label class="form-label">Tên Quyền</label>
+                            <input type="text" class="form-control" name="role_name" id="edit_role_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Level</label>
+                            <input type="number" class="form-control" name="role_level" id="edit_role_level" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" name="description" id="edit_description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var editButtons = document.querySelectorAll('.edit-role-btn');
+            editButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = this.getAttribute('data-id');
+                    var name = this.getAttribute('data-name');
+                    var level = this.getAttribute('data-level');
+                    var desc = this.getAttribute('data-desc');
+
+                    document.getElementById('edit_role_id').value = id;
+                    document.getElementById('edit_role_name').value = name;
+                    document.getElementById('edit_role_level').value = level;
+                    document.getElementById('edit_description').value = desc;
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -161,13 +161,34 @@ if (isset($_SESSION['user_id'])) {
         <div class="row">
             <?php
             $type_filter = $_GET['type'] ?? '';
+            $user_role = $_SESSION['role_level'] ?? 1;
+            
             $sql = "SELECT posts.*, users.username 
                     FROM posts 
                     JOIN users ON posts.user_id = users.id";
+            
+            // Xây dựng điều kiện WHERE dựa trên quyền hạn
+            $where_conditions = [];
+            
+            if ($user_role >= 3) { // Owner và Moderator: nhìn tất cả
+                // Không cần điều kiện status
+            } elseif ($user_role == 2) { // Contributor: nhìn bài được duyệt (status=1) hoặc bài của mình ở status 0 và -1
+                $user_id = $_SESSION['user_id'];
+                $where_conditions[] = "(posts.status = 1 OR (posts.user_id = $user_id AND posts.status IN (0, -1)))";
+            } else { // Observer: chỉ nhìn bài được duyệt
+                $where_conditions[] = "posts.status = 1";
+            }
+            
+            // Thêm filter loại bài
             if ($type_filter == 'text' || $type_filter == 'video') {
                 $safe_type = mysqli_real_escape_string($conn, $type_filter);
-                $sql .= " WHERE posts.type = '$safe_type'";
+                $where_conditions[] = "posts.type = '$safe_type'";
             }
+            
+            if (!empty($where_conditions)) {
+                $sql .= " WHERE " . implode(" AND ", $where_conditions);
+            }
+            
             $sql .= " ORDER BY posts.created_at DESC";
             $query = mysqli_query($conn, $sql);
             if (mysqli_num_rows($query) > 0) {
@@ -197,6 +218,29 @@ if (isset($_SESSION['user_id'])) {
                                     <?php if ($row['type'] == 'text') echo '<i class="bi bi-file-text-fill text-primary"></i> '; ?>
                                     <?php echo htmlspecialchars($row['title']); ?>
                                 </h5>
+                                <?php 
+                                // Hiển thị badge status
+                                $user_role = $_SESSION['role_level'] ?? 1;
+                                $show_status = false;
+                                
+                                if ($user_role >= 3) { // Owner và Moderator: luôn hiển thị
+                                    $show_status = true;
+                                } elseif ($user_role == 2 && $row['status'] != 1) { // Contributor: hiển thị nếu chưa duyệt hoặc bị từ chối
+                                    if ($row['user_id'] == $_SESSION['user_id']) {
+                                        $show_status = true;
+                                    }
+                                }
+                                
+                                if ($show_status) {
+                                    if ($row['status'] == 1) {
+                                        echo '<span class="badge bg-success mb-2">✓ Đã duyệt</span>';
+                                    } elseif ($row['status'] == 0) {
+                                        echo '<span class="badge bg-warning mb-2">⏳ Chờ duyệt</span>';
+                                    } elseif ($row['status'] == -1) {
+                                        echo '<span class="badge bg-danger mb-2">✗ Bị từ chối</span>';
+                                    }
+                                }
+                                ?>
                                 <p class="text-muted flex-grow-1" style="word-wrap: break-word; overflow-wrap: break-word;">
                                     <?php echo mb_strimwidth(htmlspecialchars($row['content']), 0, 100, "..."); ?>
                                 </p>
@@ -220,6 +264,24 @@ if (isset($_SESSION['user_id'])) {
                                 <a href="./posts/detailed_post.php?id=<?php echo $row['id']; ?>" class="btn btn-primary btn-sm w-100">
                                     <i class="bi bi-eye me-2"></i>Xem chi tiết
                                 </a>
+                                <?php 
+                                // Nút duyệt/từ chối cho Owner và Moderator
+                                $user_role = $_SESSION['role_level'] ?? 1;
+                                if ($user_role >= 3) {
+                                    echo '<div class="d-flex gap-2 mt-2">';
+                                    if ($row['status'] != 1) {
+                                        echo '<a href="./posts/approve_post.php?id=' . $row['id'] . '" class="btn btn-success btn-sm flex-grow-1">
+                                                <i class="bi bi-check-lg me-1"></i>Duyệt
+                                              </a>';
+                                    }
+                                    if ($row['status'] != -1) {
+                                        echo '<a href="./posts/reject_post.php?id=' . $row['id'] . '" class="btn btn-danger btn-sm flex-grow-1">
+                                                <i class="bi bi-x-lg me-1"></i>Từ chối duyệt
+                                              </a>';
+                                    }
+                                    echo '</div>';
+                                }
+                                ?>
                             </div>
                         </div>
                     </div>

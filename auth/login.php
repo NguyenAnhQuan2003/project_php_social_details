@@ -15,6 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'){
             if ($password === $user['password']){
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
+                $_SESSION['role_id'] = $user['role_id'];
+                $_SESSION['role_level'] = $user['role_level'];
+                $_SESSION['email'] = $user['email'];
                 header('Location: ../index.php');
                 exit();
             } else {

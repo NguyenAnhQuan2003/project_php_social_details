@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: localhost
--- Thời gian đã tạo: Th12 14, 2025 lúc 04:39 AM
+-- Thời gian đã tạo: Th12 15, 2025 lúc 09:37 AM
 -- Phiên bản máy phục vụ: 10.4.28-MariaDB
 -- Phiên bản PHP: 8.1.17
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Cơ sở dữ liệu: `schema_database`
+-- Cơ sở dữ liệu: `k73_nhom6`
 --
 
 -- --------------------------------------------------------
